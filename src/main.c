@@ -87,18 +87,19 @@ int read_host_config(const char *filename, host_entry_t *hosts, int max_hosts) {
 
 
 int main() {
-    printf("Network Monitor CLI\n");
-    printf("Commands:\n");
-    printf("  ping <host>\n");
-    printf("  scan <host> <port>\n");
-    printf("  monitor [count]          - Start monitoring (default: 10 samples)\n");
-    printf("  report [file]            - Generate statistics report from log file\n");
-    printf("  stats [file]             - Show detailed statistics\n");
-    printf("  exit\n");
+
 
     char cmd[256];
 
     while (1) {
+        printf("Network Monitor CLI\n");
+        printf("Commands:\n");
+        printf("  ping <host>\n");
+        printf("  scan <host> <port>\n");
+        printf("  monitor [count]          - Start monitoring (default: 10 samples)\n");
+        printf("  report [file]            - Generate statistics report from log file\n");
+        printf("  stats [file]             - Show detailed statistics\n");
+        printf("  exit\n");
         printf("\n> ");
         fgets(cmd, sizeof(cmd), stdin);
 
@@ -130,7 +131,6 @@ int main() {
                 continue;
             }
 
-            printf("Starting multi-thread monitoring of %d hosts...\n", host_count);
             int monitor_count = 10;
             char *ptr = cmd + 7;
             while (*ptr == ' ') ptr++;
@@ -141,7 +141,16 @@ int main() {
                     monitor_count = 10;
                 }
             }
-            start_monitoring(hosts, host_count, monitor_count, DEFAULT_LOG_FILE);
+            
+            pthread_t thread_ids[100];
+            int threads_created = start_monitoring(hosts, host_count, monitor_count, DEFAULT_LOG_FILE, thread_ids);
+            
+            // Wait for all monitoring threads to complete
+            for (int i = 0; i < threads_created; i++) {
+                pthread_join(thread_ids[i], NULL);
+            }
+            
+            printf("All monitoring completed.\n");
 
         } else if (strncmp(cmd, "report", 6) == 0) {
             char *ptr = cmd + 6;

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 
 
@@ -74,7 +75,8 @@ void stats_update_ping(ping_stats_t *s, int success, double rtt);
 void stats_print(const ping_stats_t *s);
 
 /* 多线程监控 */
-void start_monitoring(host_entry_t *hosts, int host_count, int sample_count, const char *log_file);
+/* Returns number of threads created, stores thread IDs in thread_ids array */
+int start_monitoring(host_entry_t *hosts, int host_count, int sample_count, const char *log_file, pthread_t *thread_ids);
 
 
 

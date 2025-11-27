@@ -61,23 +61,22 @@ static void *monitor_thread(void *arg) {
     }
     
     double uptime_pct = uptime_tracker_percentage(&uptime);
-    printf("Monitoring of %s completed (Uptime: %.2f%%)\n> ", host->hostname, uptime_pct);
+    printf("Monitoring of %s completed (Uptime: %.2f%%)\n", host->hostname, uptime_pct);
     fflush(stdout);
     free(args);
     return NULL;
 }
 
-void start_monitoring(host_entry_t *hosts, int host_count, int sample_count, const char *log_file)  {
-    printf("Starting monitoring of %s with %d samples\n", hosts[0].hostname, sample_count);
+int start_monitoring(host_entry_t *hosts, int host_count, int sample_count, const char *log_file, pthread_t *thread_ids)  {
+    printf("Starting monitoring of %d hosts with %d samples each...\n", host_count, sample_count);
     for (int i = 0; i < host_count; i++) {
         monitor_args_t *args = (monitor_args_t *)malloc(sizeof(monitor_args_t));
         args->host = &hosts[i];
         args->sample_count = sample_count;
         args->log_file = log_file;
         stats_init(&hosts[i].ping_stats);
-        pthread_t tid;
-        pthread_create(&tid, NULL, monitor_thread, (void *)args);
-        pthread_detach(tid);
+        pthread_create(&thread_ids[i], NULL, monitor_thread, (void *)args);
     }
+    return host_count;
 }
 
