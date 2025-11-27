@@ -54,6 +54,7 @@ typedef struct {
 typedef struct {
     host_entry_t *host;   // 第 i 个 host 的地址
     int sample_count;     // 每个 host 的样本数
+    const char *log_file; // Optional log file path for data storage
 } monitor_args_t;
 
 
@@ -73,7 +74,7 @@ void stats_update_ping(ping_stats_t *s, int success, double rtt);
 void stats_print(const ping_stats_t *s);
 
 /* 多线程监控 */
-void start_monitoring(host_entry_t *hosts, int host_count,int sample_count);
+void start_monitoring(host_entry_t *hosts, int host_count, int sample_count, const char *log_file);
 
 
 

@@ -1,14 +1,24 @@
 // monitor.c
 #include "monitor.h"
+#include "data_analysis.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include <unistd.h>
+
+#define DEFAULT_LOG_FILE "monitor_records.log"
 
 static void *monitor_thread(void *arg) {
     monitor_args_t *args = (monitor_args_t *)arg;
     host_entry_t *host = args->host;
     int sample_count = args->sample_count;
+    const char *log_file = args->log_file ? args->log_file : DEFAULT_LOG_FILE;
+    
+    uptime_tracker_t uptime = {0};
+    uptime.start_time = time(NULL);
+    
     printf("Monitoring thread started for %s with %d samples\n", host->hostname, sample_count);
     while (sample_count > 0) {
         double rtt;
@@ -20,6 +30,15 @@ static void *monitor_thread(void *arg) {
                ping_ok == 0 ? "OK" : "FAIL",
                ping_ok == 0 ? rtt : -1);
         stats_update_ping(&host->ping_stats, ping_ok == 0, rtt);
+        uptime_tracker_update(&uptime, ping_ok == 0);
+
+        // Create monitoring record
+        monitor_record_t record = {0};
+        record.timestamp = time(NULL);
+        strncpy(record.hostname, host->hostname, sizeof(record.hostname) - 1);
+        record.rtt_ms = ping_ok == 0 ? rtt : 0.0;
+        record.ping_success = ping_ok == 0;
+        record.port_count = host->port_count;
 
         for (int i = 0; i < host->port_count; i++) {
             int st = scan_port(host->hostname, host->ports[i]);
@@ -28,23 +47,33 @@ static void *monitor_thread(void *arg) {
                    host->ports[i],
                    (st == PORT_OPEN ? "OPEN" :
                     st == PORT_CLOSED ? "CLOSED" : "TIMEOUT"));
+            
+            // Store port status in record
+            record.port_status[i].port = host->ports[i];
+            record.port_status[i].status = (port_status_t)st;
         }
+
+        // Save record to file
+        data_store_append(log_file, &record);
 
         sleep(2);  // 每 2 秒监控一次
         sample_count--;
     }
-    printf("Monitoring of %s completed\n> ", host->hostname);
+    
+    double uptime_pct = uptime_tracker_percentage(&uptime);
+    printf("Monitoring of %s completed (Uptime: %.2f%%)\n> ", host->hostname, uptime_pct);
     fflush(stdout);
     free(args);
     return NULL;
 }
 
-void start_monitoring(host_entry_t *hosts, int host_count,int sample_count)  {
+void start_monitoring(host_entry_t *hosts, int host_count, int sample_count, const char *log_file)  {
     printf("Starting monitoring of %s with %d samples\n", hosts[0].hostname, sample_count);
     for (int i = 0; i < host_count; i++) {
         monitor_args_t *args = (monitor_args_t *)malloc(sizeof(monitor_args_t));
         args->host = &hosts[i];
         args->sample_count = sample_count;
+        args->log_file = log_file;
         stats_init(&hosts[i].ping_stats);
         pthread_t tid;
         pthread_create(&tid, NULL, monitor_thread, (void *)args);
