@@ -1,12 +1,15 @@
 // tcp_scan.c
-#include "monitor.h"
-#include <arpa/inet.h>
-#include <fcntl.h>
+#define _POSIX_C_SOURCE 200112L
+#include <sys/socket.h>
 #include <netdb.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include "monitor.h"
 
 int scan_port(const char *host, int port) {
     struct addrinfo hints = {0}, *res;
