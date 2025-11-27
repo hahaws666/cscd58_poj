@@ -1,1 +1,14 @@
-.o
+*.o
+*.exe
+*.out
+*.a
+*.so
+*.dylib
+*.bundle
+*.lib
+*.def
+*.exp
+*.rc
+*.res
+*.manifest
+*.manifest.in
