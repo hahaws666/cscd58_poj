@@ -13,7 +13,7 @@ typedef struct {
     char hostname[256];
     time_t timestamp;
     double rtt_ms;
-    port_status_t port_status[32];
+    port_stats_t port_status[32];
     int port_count;
     int ping_success;
 } monitor_record_t;
