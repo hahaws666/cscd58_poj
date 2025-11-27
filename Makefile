@@ -18,7 +18,8 @@ SOURCES = $(SRC_DIR)/main.c \
           $(SRC_DIR)/monitor.c \
           $(SRC_DIR)/stats.c \
           $(SRC_DIR)/icmp.c \
-          $(SRC_DIR)/tcp_scan.c
+          $(SRC_DIR)/tcp_scan.c \
+          $(SRC_DIR)/data_analysis.c
 
 # 目标文件
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
