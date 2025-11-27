@@ -6,6 +6,86 @@
 
 #define DEFAULT_LOG_FILE "monitor_records.log"
 
+
+/*
+ * Read host configuration from file
+ * Format: each line is "hostname port1,port2,port3"
+ * Returns number of hosts successfully loaded
+ */
+int read_host_config(const char *filename, host_entry_t *hosts, int max_hosts) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Failed to open host config file: %s\n", filename);
+        return 0;
+    }
+
+    char line[512];
+    int host_count = 0;
+
+    while (host_count < max_hosts && fgets(line, sizeof(line), file)) {
+        // Skip empty lines and whitespace-only lines
+        int len = strlen(line);
+        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
+            line[--len] = '\0';
+        }
+
+        // Skip empty lines
+        int i = 0;
+        while (line[i] == ' ' || line[i] == '\t') i++;
+        if (line[i] == '\0') continue;
+
+        host_entry_t *host = &hosts[host_count];
+        memset(host, 0, sizeof(host_entry_t));
+
+        // Parse hostname and ports
+        char hostname[256];
+        char port_str[256];
+
+        // Split by space or tab
+        if (sscanf(line, "%255s %255s", hostname, port_str) != 2) {
+            // Try to parse without ports (hostname only)
+            if (sscanf(line, "%255s", hostname) == 1) {
+                strncpy(host->hostname, hostname, sizeof(host->hostname) - 1);
+                host->port_count = 0;
+                host_count++;
+            }
+            continue;
+        }
+
+        // Copy hostname
+        strncpy(host->hostname, hostname, sizeof(host->hostname) - 1);
+        host->hostname[sizeof(host->hostname) - 1] = '\0';
+
+        // Parse comma-separated ports
+        char *token = strtok(port_str, ",");
+        int port_count = 0;
+
+        while (token != NULL && port_count < 32) {
+            // Remove leading/trailing whitespace
+            while (*token == ' ' || *token == '\t') token++;
+            char *end = token + strlen(token) - 1;
+            while (end > token && (*end == ' ' || *end == '\t')) {
+                *end = '\0';
+                end--;
+            }
+
+            int port = atoi(token);
+            if (port > 0 && port <= 65535) {
+                host->ports[port_count++] = port;
+            }
+            token = strtok(NULL, ",");
+        }
+
+        host->port_count = port_count;
+        host_count++;
+    }
+
+    fclose(file);
+    return host_count;
+}
+
+
+
 int main() {
     printf("Network Monitor CLI\n");
     printf("Commands:\n");
@@ -41,7 +121,16 @@ int main() {
             printf("Port %d is %d\n", port, st);
 
         } else if (strncmp(cmd, "monitor", 7) == 0) {
-            printf("Starting multi-thread monitoring...\n");
+
+            // read host config file
+            host_entry_t hosts[100];
+            int host_count = read_host_config("host_config.txt", hosts, 100);
+            if (host_count == 0) {
+                printf("No hosts found in host config file\n");
+                continue;
+            }
+
+            printf("Starting multi-thread monitoring of %d hosts...\n", host_count);
             int monitor_count = 10;
             char *ptr = cmd + 7;
             while (*ptr == ' ') ptr++;
@@ -52,10 +141,7 @@ int main() {
                     monitor_count = 10;
                 }
             }
-            host_entry_t hosts[1] = {
-                {.hostname = "8.8.8.8", .ports = {80, 443}, .port_count = 2}
-            };
-            start_monitoring(hosts, 1, monitor_count, DEFAULT_LOG_FILE);
+            start_monitoring(hosts, host_count, monitor_count, DEFAULT_LOG_FILE);
 
         } else if (strncmp(cmd, "report", 6) == 0) {
             char *ptr = cmd + 6;
