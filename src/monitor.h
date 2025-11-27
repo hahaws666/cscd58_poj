@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <netinet/in.h>
 
+
+
+
 /*
  * 端口扫描状态
  */
@@ -48,6 +51,12 @@ typedef struct {
     port_stats_t port_status[32];
 } host_entry_t;
 
+typedef struct {
+    host_entry_t *host;   // 第 i 个 host 的地址
+    int sample_count;     // 每个 host 的样本数
+} monitor_args_t;
+
+
 /* ============================
  *  函数声明
  * ============================ */
@@ -64,6 +73,12 @@ void stats_update_ping(ping_stats_t *s, int success, double rtt);
 void stats_print(const ping_stats_t *s);
 
 /* 多线程监控 */
-void start_monitoring(host_entry_t *hosts, int host_count);
+void start_monitoring(host_entry_t *hosts, int host_count,int sample_count);
 
+
+
+/*
+store the status into a file
+*/
+    
 #endif
