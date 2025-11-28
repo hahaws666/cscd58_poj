@@ -9,40 +9,44 @@ void stats_init(ping_stats_t *s) {
     s->max_rtt_ms = 0.0;
     s->sum_rtt_ms = 0.0;
     s->loss_rate = 0.0;
+    s->jitter_ms = 0.0;
+    s->previous_rtt = 0.0;
 }
 
-void stats_update_ping(ping_stats_t *s, int success, double rtt) {
+void statsUpdate(ping_stats_t *s, int success, double rtt) {
     s->total_sent++;
 
     if (success) {
+        if (s->total_received > 1) {
+            double diff = rtt - s->previous_rtt;
+            if (diff < 0) diff = -diff;
+            s->jitter_ms += (diff - s->jitter_ms) / 16.0;
+        }
+        
+        s->previous_rtt = rtt;
         s->total_received++;
         s->last_rtt_ms = rtt;
-
-        // 更新 min/max
         if (rtt < s->min_rtt_ms) s->min_rtt_ms = rtt;
         if (rtt > s->max_rtt_ms) s->max_rtt_ms = rtt;
-
-        // 用于平均值
         s->sum_rtt_ms += rtt;
     }
 
-    // 更新丢包率
-    s->loss_rate =
-        1.0 - ((double)s->total_received / (double)s->total_sent);
+    s->loss_rate = 1.0 - ((double)s->total_received / (double)s->total_sent);
 }
 
 void stats_print(const ping_stats_t *s) {
-    printf("---- Ping Stats ----\n");
-    printf("Total sent:      %d\n", s->total_sent);
-    printf("Total received:  %d\n", s->total_received);
-    printf("Loss rate:       %.2f%%\n", s->loss_rate * 100);
-
+    printf("\n+----------------------+-----------------+\n");
+    printf("| Metric               | Value           |\n");
+    printf("+----------------------+-----------------+\n");
+    printf("| Total Sent           | %-15d |\n", s->total_sent);
+    printf("| Total Received       | %-15d |\n", s->total_received);
+    printf("| Loss Rate            | %-14.2f%% |\n", s->loss_rate * 100.0);
+    
     if (s->total_received > 0) {
-        double avg = s->sum_rtt_ms / (double)s->total_received;
-        printf("Last RTT:        %.2f ms\n", s->last_rtt_ms);
-        printf("Min RTT:         %.2f ms\n", s->min_rtt_ms);
-        printf("Max RTT:         %.2f ms\n", s->max_rtt_ms);
-        printf("Avg RTT:         %.2f ms\n", avg);
+        printf("| Min RTT              | %-12.2f ms |\n", s->min_rtt_ms);
+        printf("| Max RTT              | %-12.2f ms |\n", s->max_rtt_ms);
+        printf("| Avg RTT              | %-12.2f ms |\n", s->sum_rtt_ms / s->total_received);
+        printf("| Jitter               | %-12.2f ms |\n", s->jitter_ms);
     }
-    printf("---------------------\n");
+    printf("+----------------------+-----------------+\n");
 }

@@ -55,7 +55,12 @@ static void *monitor_thread(void *arg) {
 
         // Save record to file
         data_store_append(log_file, &record);
+        char alert_msg[256];
+        double uptime_pct = uptime_tracker_percentage(&uptime);
 
+        if (alert_check_trigger(&args->alert_conf, &host->ping_stats, rtt, uptime_pct, alert_msg, sizeof(alert_msg))) {
+            fprintf(stderr, "[ALERT] Host %s: %s\n", host->hostname, alert_msg);
+        }
         sleep(2);  // 每 2 秒监控一次
         sample_count--;
     }

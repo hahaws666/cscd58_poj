@@ -7,6 +7,12 @@
 #define DEFAULT_LOG_FILE "monitor_records.log"
 
 
+alert_config_t global_alerts = {
+    .max_latency_ms = 100.0,
+    .max_loss_rate = 0.05, // 5%
+    .min_uptime_pct = 99.0
+};
+
 /*
  * Read host configuration from file
  * Format: each line is "hostname port1,port2,port3"
@@ -33,6 +39,9 @@ int read_host_config(const char *filename, host_entry_t *hosts, int max_hosts) {
         int i = 0;
         while (line[i] == ' ' || line[i] == '\t') i++;
         if (line[i] == '\0') continue;
+        
+        // Skip comments
+        if (line[i] == '#') continue;
 
         host_entry_t *host = &hosts[host_count];
         memset(host, 0, sizeof(host_entry_t));
@@ -223,8 +232,19 @@ int main() {
                 stats_print(&stats);
             }
 
-        } else if (strncmp(cmd, "exit", 4) == 0) {
+        }else if (strncmp(cmd, "help", 4) == 0) {
+            printf("\n=== Network Monitor Help ===\n");
+            printf("  ping <host>          : Send a single ICMP echo request\n");
+            printf("  scan <host> <port>   : Check if a TCP port is open\n");
+            printf("  monitor [count]      : Start monitoring hosts in host_config.txt\n");
+            printf("                         (default count: 10)\n");
+            printf("  report [file]        : Show summary stats from log file\n");
+            printf("  stats [file]         : Show detailed logs + summary\n");
+            printf("  exit                 : Quit the program\n");
+            printf("============================\n");
+        }else if (strncmp(cmd, "exit", 4) == 0) {
             break;
         }
     }
+
 }
