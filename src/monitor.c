@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #define DEFAULT_LOG_FILE "monitor_records.log"
+extern alert_config_t global_alerts;
 
 static void *monitor_thread(void *arg) {
     monitor_args_t *args = (monitor_args_t *)arg;
@@ -76,9 +77,15 @@ int start_monitoring(host_entry_t *hosts, int host_count, int sample_count, cons
     printf("Starting monitoring of %d hosts with %d samples each...\n", host_count, sample_count);
     for (int i = 0; i < host_count; i++) {
         monitor_args_t *args = (monitor_args_t *)malloc(sizeof(monitor_args_t));
+        if (!args) continue; // Safety check
+        
         args->host = &hosts[i];
         args->sample_count = sample_count;
         args->log_file = log_file;
+        
+        // COPY THE GLOBAL ALERT CONFIG
+        args->alert_conf = global_alerts;
+
         stats_init(&hosts[i].ping_stats);
         pthread_create(&thread_ids[i], NULL, monitor_thread, (void *)args);
     }
