@@ -63,6 +63,8 @@ Avg RTT:         7.29 ms
 Total records: 3
 ...
 ```
+## File Structures
+We can compile all by MAKEFILE management and all header and c files are stored in `src` directory
 
 ## Data Storage
 
@@ -81,3 +83,9 @@ Use the `report` or `stats` commands to analyze historical data.
 make clean
 ```
 
+## References
+https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
+https://man7.org/linux/man-pages/man3/clock_gettime.3.html
+https://pubs.opengroup.org/onlinepubs/009695099/functions/setsockopt.html
+https://man7.org/linux/man-pages/man2/select.2.html
+https://elixir.bootlin.com/linux/v6.11.6/source/drivers/tty/serial/8250/8250_port.c#L54

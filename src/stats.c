@@ -1,27 +1,15 @@
 #include "monitor.h"
 #include <stdio.h>
 
-void statsInit(ping_stats_t *s) {
-    s->total_sent = 0;
-    s->total_received = 0;
-    s->last_rtt_ms = 0.0;
-    s->min_rtt_ms = 1e9;
-    s->max_rtt_ms = 0.0;
-    s->sum_rtt_ms = 0.0;
-    s->loss_rate = 0.0;
-}
-
 void statsUpdate(ping_stats_t *s, int success, double rtt) {
     s->total_sent++;
 
     if (success) {
         s->total_received++;
         s->last_rtt_ms = rtt;
-
         // 更新 min/max
         if (rtt < s->min_rtt_ms) s->min_rtt_ms = rtt;
         if (rtt > s->max_rtt_ms) s->max_rtt_ms = rtt;
-
         // 用于平均值
         s->sum_rtt_ms += rtt;
     }
@@ -31,7 +19,7 @@ void statsUpdate(ping_stats_t *s, int success, double rtt) {
 }
 
 void statsPrint(const ping_stats_t *s) {
-    // print for debug..
+    // print for debug.....
     printf("---- Ping Stats ----\n");
     printf("Total sent:      %d\n", s->total_sent);
     printf("Total received:  %d\n", s->total_received);

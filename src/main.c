@@ -7,31 +7,19 @@
 #define DEFAULT_LOG_FILE "monitor_records.log"
 #define MX 65535
 #define SIZE 512
+
+
 /*
- * Returns number of hosts successfully loaded
+ * Read a given file one by one line and then record each line's info to hostname
+ * what is returned is how many hosts are loaded
  */
-int read_host_config(const char *file, host_entry_t *hosts, int max_hosts) {
-    FILE *file = fopen(file, "r");
-
+int read_host_config(const char *file, host_entry_t *hosts, int mx) {
+    FILE *fp = fopen(file, "r");
     char line[SIZE];
-    int host_count = 0;
-
-    while (host_count < max_hosts && fgets(line, sizeof(line), file)) {
-        // Skip empty lines and whitespace-only lines
-        int len = strlen(line);
-        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
-            line[--len] = '\0';
-        }
-
-        // Skip empty lines
-        int i = 0;
-        while (line[i] == ' ' || line[i] == '\t') i++;
-        if (line[i] == '\0') continue;
-
-        host_entry_t *host = &hosts[host_count];
+    int cnt = 0;
+    while (cnt < mx && fgets(line, sizeof(line), fp)) {
+        host_entry_t *host = &hosts[cnt];
         memset(host, 0, sizeof(host_entry_t));
-
-        // Parse hostname and ports
         char hostname[256];
         char port_str[256];
 
@@ -41,57 +29,39 @@ int read_host_config(const char *file, host_entry_t *hosts, int max_hosts) {
             if (sscanf(line, "%255s", hostname) == 1) {
                 strncpy(host->hostname, hostname, sizeof(host->hostname) - 1);
                 host->port_cnt = 0;
-                host_count++;
+                cnt++;
             }
             continue;
         }
-
-        // Copy hostname
+        printf("debug noe copy to host name\n");
         strncpy(host->hostname, hostname, sizeof(host->hostname) - 1);
         host->hostname[sizeof(host->hostname) - 1] = '\0';
-
-        // Parse comma-separated ports
         char *token = strtok(port_str, ",");
         int port_cnt = 0;
-
-        while (token != NULL && port_cnt < 32) {
-            // Remove leading/trailing whitespace
-            while (*token == ' ' || *token == '\t') token++;
-            char *end = token + strlen(token) - 1;
-            while (end > token && (*end == ' ' || *end == '\t')) {
-                *end = '\0';
-                end--;
-            }
-
+        while (token && port_cnt < 32) {
             int port = atoi(token);
-            if (port > 0 && port <= MX) {
-                host->ports[port_cnt++] = port;
-            }
+            host->ports[port_cnt++] = port;
             token = strtok(NULL, ",");
         }
 
         host->port_cnt = port_cnt;
-        host_count++;
+        cnt++;
     }
-
-    fclose(file);
-    return host_count;
+    fclose(fp);
+    return cnt;
 }
 
 
 
 int main() {
-
-
-    char cmd[256];
-
+    char cmd[100];
     while (1) {
         printf("Network Monitor\n");
         printf("Commands:\n");
         fgets(cmd, sizeof(cmd), stdin);
 
         // ping case
-        if (strncmp(cmd, "ping", 4) == 0) {
+        if (strcmp(cmd, "ping") == 0) {
             char host[256];
             sscanf(cmd, "ping %s", host);
 
@@ -99,46 +69,49 @@ int main() {
             if (icmp_ping(host, &rtt) == 0) printf("RTT = %.2f ms\n", rtt);
             else printf("Ping failed\n");
         } // scan port case
-        else if (strncmp(cmd, "scan", 4) == 0) {
+        else if (strcmp(cmd, "scan") == 0) {
             char host[256];
             int port;
             sscanf(cmd, "scan %s %d", host, &port);
-
-            int st = scan_port(host, port);
-            printf("Port %d is %d\n", port, st);
+            int ans = scan_port(host, port);
         } // monitor case
-        else if (strncmp(cmd, "monitor", 7) == 0) {
-
+        else if (strcmp(cmd, "monitor") == 0) {
             // read host config file
             host_entry_t hosts[100];
-            int host_count = read_host_config("host_config.txt", hosts, 100);
-            if (host_count == 0) {
-                printf("No hosts found in host config file\n");
-                continue;
-            }
-
+            int cnt = read_host_config("host_config.txt", hosts, 100);
             int monitor_count = 10;
             char *ptr = cmd + 7;
+            // go until we find a white space
             while (*ptr == ' ') ptr++;
             if (*ptr != '\0') {
                 monitor_count = atoi(ptr);
-                if (monitor_count <= 0) {
-                    printf("Invalid monitor count, using default 10\n");
-                    monitor_count = 10;
-                }
             }
             
             pthread_t thread_ids[100];
-            int threads_created = start_monitoring(hosts, host_count, monitor_count, DEFAULT_LOG_FILE, thread_ids);
-            
-            // Wait for all monitoring threads to complete
+            int threads_created = start_monitoring(hosts, cnt, monitor_count, DEFAULT_LOG_FILE, thread_ids);
+            for (int i = 0; i < cnt; i++) {
+                monitor_args_t *ans_args = malloc(sizeof(monitor_args_t));
+                args->host = &hosts[i];
+                args->cnt = monitor_count;
+                args->log_file = DEFAULT_LOG_FILE;
+                hosts[i].ping_stats.total_sent = 0.0;
+                hosts[i].ping_stats.total_received = 0;
+                hosts[i].ping_stats.last_rtt_ms = 0.0;
+                hosts[i].ping_stats.min_rtt_ms = 1e9;
+                hosts[i].ping_stats.max_rtt_ms = 0.0;
+                hosts[i].ping_stats.sum_rtt_ms = 0.0;
+                hosts[i].ping_stats.loss_rate = 0.0;
+                pthread_create(&thread_ids[i], NULL, monitor_thread, args);
+            }
+
+            // 等全部结束。。。
             for (int i = 0; i < threads_created; i++) {
                 pthread_join(thread_ids[i], NULL);
             }
             
             printf("All monitoring completed.\n");
 
-        } else if (strncmp(cmd, "report", 6) == 0) {
+        } else if (strcmp(cmd, "report") == 0) {
             char *ptr = cmd + 6;
             while (*ptr == ' ') ptr++;
             const char *log_file = (*ptr != '\n' && *ptr != '\0') ? ptr : DEFAULT_LOG_FILE;
@@ -147,9 +120,9 @@ int main() {
             char filepath[256];
             strncpy(filepath, log_file, sizeof(filepath) - 1);
             filepath[sizeof(filepath) - 1] = '\0';
-            size_t len = strlen(filepath);
-            if (len > 0 && filepath[len - 1] == '\n') {
-                filepath[len - 1] = '\0';
+            size_t n = strlen(filepath);
+            if (n > 0 && filepath[n - 1] == '\n') {
+                filepath[n - 1] = '\0';
             }
             
             monitor_record_t records[1000];
@@ -165,7 +138,7 @@ int main() {
                 statsPrint(&stats);
             }
 
-        } else if (strncmp(cmd, "stats", 5) == 0) {
+        } else if (strcmp(cmd, "stats") == 0) {
             char *ptr = cmd + 5;
             while (*ptr == ' ') ptr++;
             const char *log_file = (*ptr != '\n' && *ptr != '\0') ? ptr : DEFAULT_LOG_FILE;
@@ -203,7 +176,7 @@ int main() {
                 statsPrint(&stats);
             }
 
-        } else if (strncmp(cmd, "exit", 4) == 0) {
+        } else if (strcmp(cmd, "exit") == 0) {
             break;
         }
     }

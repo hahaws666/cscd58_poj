@@ -5,9 +5,6 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
-
-
-
 /*
  * 端口扫描状态
  */
@@ -69,17 +66,10 @@ int icmp_ping(const char *host, double *rtt_ms);
 int scan_port(const char *host, int port);
 
 /* Stats 更新函数 */
-void statsInit(ping_stats_t *s);
 void statsUpdate(ping_stats_t *s, int success, double rtt);
 void statsPrint(const ping_stats_t *s);
 
 /* 多线程监控 */
 int start_monitoring(host_entry_t *hosts, int host_count, int cnt, const char *log_file, pthread_t *thread_ids);
-
-
-
-/*
-store the status into a file
-*/
-    
+void *monitor_thread(void *arg) 
 #endif
