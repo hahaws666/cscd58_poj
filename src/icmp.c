@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 // helper function to do the checksum returns checksum
+// this is equivalent to our a3 after some refactoring
 static uint16_t cksum(void *buf, int len) {
     uint32_t sum = 0;
     uint16_t *ptr = buf;
@@ -28,6 +29,7 @@ static uint16_t cksum(void *buf, int len) {
     sum += (sum >> 16);
     return ~sum;
 }
+
 
 // function that to the icmp ping stuffs
 int icmp_ping(const char *host, double *rtt_ms) {

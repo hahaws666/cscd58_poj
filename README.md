@@ -2,6 +2,10 @@
 
 This project provides a simple network monitoring CLI written in C. It supports ICMP ping latency measurement, TCP port scanning, and multi-threaded monitoring for predefined hosts.
 
+## Group Members
+- Shuang Wu 1008838135 shuaang.wu@mail.utoronto.ca
+- Andrew Li 1008837993 qj.li@mail.utoronto.ca
+- Delun Sun 1007925391 delun.sun@mail.utoronto.ca
 ## Features
 
 ### Monitoring Capabilities
@@ -18,37 +22,17 @@ This project provides a simple network monitoring CLI written in C. It supports 
 - **Threshold-based alerts**: Configure latency, loss rate, and uptime thresholds to trigger alerts
 - **Integrated CLI commands**: Access data analysis features directly through `report` and `stats` commands
 
-## Build
+## Compile and run
 
 ```bash
 cd /home/mininet/project/cscd58_poj
 make
-```
-
-The resulting binary is produced at `bin/monitor`.
-
-## Run
-
-Root privileges are required because raw sockets are used:
-
-```bash
 sudo ./bin/monitor
 ```
 
-Available CLI commands:
+sudo is required here
 
-- `ping <host>`: send ICMP echo requests and report RTT.
-- `scan <host> <port>`: perform a non-blocking TCP port scan.
-- `monitor [count]`: start multi-thread monitoring; optional `count` sets sample iterations (default 10).
-  - Automatically saves monitoring records to `monitor_records.log`
-  - Displays uptime percentage upon completion
-- `report [file]`: generate statistical report from log file (default: `monitor_records.log`)
-  - Shows total records, min/max/avg RTT, packet loss rate
-- `stats [file]`: show detailed statistics including recent records (default: `monitor_records.log`)
-  - Displays timestamped records and aggregated statistics
-- `exit`: quit the CLI.
-
-Examples:
+## Examples to play around with this:
 
 ```bash
 > monitor 3
@@ -91,44 +75,7 @@ Monitoring data is automatically saved to `monitor_records.log` (or custom file 
 
 Use the `report` or `stats` commands to analyze historical data.
 
-## Testing
-
-A standalone test program is available for the data management module:
-
-```bash
-cd /home/mininet/project/cscd58_poj
-gcc -Wall -Wextra -std=c11 -Isrc -Iinclude tests/data_analysis_test.c src/data_analysis.c src/stats.c -o build/data_analysis_test
-./build/data_analysis_test
-```
-
-This test verifies:
-- Historical data storage and loading
-- Statistical report generation
-- Uptime tracking
-- Threshold-based alerting
-
-## Project Structure
-
-```
-cscd58_poj/
-├── src/
-│   ├── main.c           # CLI entry point
-│   ├── monitor.c        # Multi-threaded monitoring
-│   ├── monitor.h        # Core data structures
-│   ├── icmp.c           # ICMP ping implementation
-│   ├── tcp_scan.c       # TCP port scanning
-│   ├── stats.c          # Statistics computation
-│   ├── data_analysis.c  # Data management & reporting
-│   └── data_analysis.h  # Data management API
-├── include/
-├── tests/
-│   └── data_analysis_test.c
-├── build/               # Compiled objects
-├── bin/                 # Executable binary
-└── Makefile
-```
-
-## Clean
+## Clean the executable
 
 ```bash
 make clean
