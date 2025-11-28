@@ -10,24 +10,24 @@ int main(void) {
     snprintf(rec.hostname, sizeof(rec.hostname), "%s", "example.com");
     rec.ping_success = 1;
     rec.rtt_ms = 12.5;
-    rec.port_count = 2;
+    rec.port_cnt = 2;
     rec.port_status[0].port = 80;
     rec.port_status[0].status = PORT_OPEN;
     rec.port_status[1].port = 443;
     rec.port_status[1].status = PORT_TIMEOUT;
 
-    if (data_store_append(filepath, &rec) != 0) {
+    if (dataappend(filepath, &rec) != 0) {
         printf("Failed to append record\n");
         return 1;
     }
 
     monitor_record_t loaded[4];
-    size_t count = data_store_load(filepath, loaded, 4);
-    printf("Loaded %zu records\n", count);
+    size_t cnt = dataload(filepath, loaded, 4);
+    printf("Loaded %zu records\n", cnt);
 
     ping_stats_t stats;
-    data_generate_report(loaded, count, &stats);
-    stats_print(&stats);
+    datareport(loaded, cnt, &stats);
+    statsPrint(&stats);
 
     uptime_tracker_t tracker = {0};
     uptime_tracker_update(&tracker, 1);
@@ -36,11 +36,10 @@ int main(void) {
     double uptime = uptime_tracker_percentage(&tracker);
     printf("Uptime: %.2f%%\n", uptime);
 
-    alert_config_t cfg = {
-        .max_latency_ms = 10.0,
-        .max_loss_rate = 0.1,
-        .min_uptime_pct = 95.0
-    };
+    alert_config_t cfg;
+    cfg.mx_latency = 10.0;
+    cfg.mx_loss = 0.1;
+    cfg.mn_time = 95.0;
 
     char msg[128];
     int triggered = alert_check_trigger(&cfg, &stats, rec.rtt_ms, uptime, msg, sizeof(msg));

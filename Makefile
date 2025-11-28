@@ -1,13 +1,14 @@
-# Makefile for Network Monitor Project
-
 # 编译器
+# gcc
 CC = gcc
 
 # 编译选项
+# options
 CFLAGS = -Wall -Wextra -std=c11 -g
 LDFLAGS = -lpthread
 
 # 目录
+# menu
 SRC_DIR = src
 INCLUDE_DIR = include
 BUILD_DIR = build
@@ -22,18 +23,23 @@ SOURCES = $(SRC_DIR)/main.c \
           $(SRC_DIR)/data_analysis.c
 
 # 目标文件
+# target files
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
 # 可执行文件
+# bin files
 TARGET = $(BIN_DIR)/monitor
 
 # 包含路径
+# all paths all the ways
 INCLUDES = -I$(SRC_DIR) -I$(INCLUDE_DIR)
 
 # 默认目标
+# default target (TARGET)
 all: $(TARGET)
 
 # 创建目录
+# build the directory
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
@@ -68,15 +74,4 @@ run: $(TARGET)
 	@echo "Note: This program requires root privileges to use raw sockets"
 	@echo "Run with: sudo $(TARGET)"
 
-# 帮助信息
-help:
-	@echo "Available targets:"
-	@echo "  all      - Build the project (default)"
-	@echo "  clean    - Remove build artifacts"
-	@echo "  rebuild  - Clean and rebuild"
-	@echo "  install  - Install the binary (may need setuid)"
-	@echo "  run      - Show how to run the program"
-	@echo "  help     - Show this help message"
-
-.PHONY: all clean rebuild install run help
 

@@ -19,8 +19,8 @@ int scan_port(const char *host, int port) {
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
-    if (getaddrinfo(host, portbuf, &hints, &res) != 0)
-        return PORT_UNKNOWN;
+    // cannnot find address information
+    if (getaddrinfo(host, portbuf, &hints, &res) != 0) return PORT_UNKNOWN;
 
     int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (sockfd < 0) {
@@ -30,6 +30,8 @@ int scan_port(const char *host, int port) {
 
     fcntl(sockfd, F_SETFL, O_NONBLOCK);
 
+    // connect to socket
+    printf("1111111111111\n");
     int ret = connect(sockfd, res->ai_addr, res->ai_addrlen);
     if (ret == 0) {
         close(sockfd);
@@ -42,7 +44,7 @@ int scan_port(const char *host, int port) {
     FD_SET(sockfd, &wfds);
 
     struct timeval tv = {1, 0};
-
+    printf("2222222222222222\n");
     ret = select(sockfd + 1, NULL, &wfds, NULL, &tv);
 
     if (ret <= 0) {
@@ -51,6 +53,7 @@ int scan_port(const char *host, int port) {
         return PORT_TIMEOUT;
     }
 
+    printf("33333333333333333333\n");
     int err = 0;
     socklen_t len = sizeof(err);
     getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &len);
@@ -58,9 +61,7 @@ int scan_port(const char *host, int port) {
     close(sockfd);
     freeaddrinfo(res);
 
-    if (err == 0)
-        return PORT_OPEN;
-    if (err == ECONNREFUSED)
-        return PORT_CLOSED;
-    return PORT_UNKNOWN;
+    if (err == 0) return PORT_OPEN;
+    else if (err == ECONNREFUSED) return PORT_CLOSED;
+    else return PORT_UNKNOWN;
 }

@@ -1,7 +1,7 @@
 #include "monitor.h"
 #include <stdio.h>
 
-void stats_init(ping_stats_t *s) {
+void statsInit(ping_stats_t *s) {
     s->total_sent = 0;
     s->total_received = 0;
     s->last_rtt_ms = 0.0;
@@ -11,7 +11,7 @@ void stats_init(ping_stats_t *s) {
     s->loss_rate = 0.0;
 }
 
-void stats_update_ping(ping_stats_t *s, int success, double rtt) {
+void statsUpdate(ping_stats_t *s, int success, double rtt) {
     s->total_sent++;
 
     if (success) {
@@ -27,16 +27,17 @@ void stats_update_ping(ping_stats_t *s, int success, double rtt) {
     }
 
     // 更新丢包率
-    s->loss_rate =
-        1.0 - ((double)s->total_received / (double)s->total_sent);
+    s->loss_rate = 1.0 - ((double)s->total_received / (double)s->total_sent);
 }
 
-void stats_print(const ping_stats_t *s) {
+void statsPrint(const ping_stats_t *s) {
+    // print for debug..
     printf("---- Ping Stats ----\n");
     printf("Total sent:      %d\n", s->total_sent);
     printf("Total received:  %d\n", s->total_received);
     printf("Loss rate:       %.2f%%\n", s->loss_rate * 100);
 
+    // 如果有一些结果。。。。。
     if (s->total_received > 0) {
         double avg = s->sum_rtt_ms / (double)s->total_received;
         printf("Last RTT:        %.2f ms\n", s->last_rtt_ms);

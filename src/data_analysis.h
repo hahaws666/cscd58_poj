@@ -14,18 +14,18 @@ typedef struct {
     time_t timestamp;
     double rtt_ms;
     port_stats_t port_status[32];
-    int port_count;
-    int ping_success;
+    int cnt;
+    int ping;
 } monitor_record_t;
 
 /*
  * Keeps track of uptime information.
  */
 typedef struct {
-    time_t start_time;
+    time_t start;
     time_t last_change;
-    uint64_t up_intervals;
-    uint64_t down_intervals;
+    uint64_t up;
+    uint64_t down;
     int current_state; // 1 = up, 0 = down
 } uptime_tracker_t;
 
@@ -33,51 +33,27 @@ typedef struct {
  * Threshold configuration for alerting.
  */
 typedef struct {
-    double max_latency_ms;
-    double max_loss_rate;
-    double min_uptime_pct;
+    double mx_latency;
+    double mx_loss;
+    double mn_time;
 } alert_config_t;
 
 /*
- * Append a monitoring record to persistent storage.
  * Returns 0 on success.
  */
-int data_store_append(const char *filepath, const monitor_record_t *record);
+int dataappend(const char *path, const monitor_record_t *record);
 
 /*
- * Load historical records from storage.
  * Returns number of records loaded.
  */
-size_t data_store_load(const char *filepath,
-                       monitor_record_t *records,
-                       size_t max_records);
+size_t dataload(const char *path, monitor_record_t *records, size_t mx);
 
-/*
- * Generate statistical report (avg/min/max RTT, loss etc.) based on records.
- */
-void data_generate_report(const monitor_record_t *records,
-                          size_t count,
-                          ping_stats_t *out_stats);
+void datareport(const monitor_record_t *records, size_t count, ping_stats_t *out_stats);
 
-/*
- * Update uptime tracker with new reachability state.
- */
 void uptime_tracker_update(uptime_tracker_t *tracker, int is_up);
 
-/*
- * Read current uptime percentage [0, 100].
- */
 double uptime_tracker_percentage(const uptime_tracker_t *tracker);
 
-/*
- * Evaluate thresholds and output alert message if triggered.
- * Returns 1 when alert should be emitted, 0 otherwise.
- */
-int alert_check_trigger(const alert_config_t *config,
-                        const ping_stats_t *stats,
-                        double current_latency_ms,
-                        double uptime_pct,
-                        char *message_buf,
-                        size_t message_len);
+int alert_check_trigger(const alert_config_t *config, const ping_stats_t *stats, double current_latency_ms, double uptime_pct, char *message_buf, size_t message_len);
 
 #endif /* DATA_ANALYSIS_H */

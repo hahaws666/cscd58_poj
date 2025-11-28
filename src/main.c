@@ -5,21 +5,15 @@
 #include <string.h>
 
 #define DEFAULT_LOG_FILE "monitor_records.log"
-
-
+#define MX 65535
+#define SIZE 512
 /*
- * Read host configuration from file
- * Format: each line is "hostname port1,port2,port3"
  * Returns number of hosts successfully loaded
  */
-int read_host_config(const char *filename, host_entry_t *hosts, int max_hosts) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        printf("Failed to open host config file: %s\n", filename);
-        return 0;
-    }
+int read_host_config(const char *file, host_entry_t *hosts, int max_hosts) {
+    FILE *file = fopen(file, "r");
 
-    char line[512];
+    char line[SIZE];
     int host_count = 0;
 
     while (host_count < max_hosts && fgets(line, sizeof(line), file)) {
@@ -46,7 +40,7 @@ int read_host_config(const char *filename, host_entry_t *hosts, int max_hosts) {
             // Try to parse without ports (hostname only)
             if (sscanf(line, "%255s", hostname) == 1) {
                 strncpy(host->hostname, hostname, sizeof(host->hostname) - 1);
-                host->port_count = 0;
+                host->port_cnt = 0;
                 host_count++;
             }
             continue;
@@ -58,9 +52,9 @@ int read_host_config(const char *filename, host_entry_t *hosts, int max_hosts) {
 
         // Parse comma-separated ports
         char *token = strtok(port_str, ",");
-        int port_count = 0;
+        int port_cnt = 0;
 
-        while (token != NULL && port_count < 32) {
+        while (token != NULL && port_cnt < 32) {
             // Remove leading/trailing whitespace
             while (*token == ' ' || *token == '\t') token++;
             char *end = token + strlen(token) - 1;
@@ -70,13 +64,13 @@ int read_host_config(const char *filename, host_entry_t *hosts, int max_hosts) {
             }
 
             int port = atoi(token);
-            if (port > 0 && port <= 65535) {
-                host->ports[port_count++] = port;
+            if (port > 0 && port <= MX) {
+                host->ports[port_cnt++] = port;
             }
             token = strtok(NULL, ",");
         }
 
-        host->port_count = port_count;
+        host->port_cnt = port_cnt;
         host_count++;
     }
 
@@ -92,36 +86,28 @@ int main() {
     char cmd[256];
 
     while (1) {
-        printf("Network Monitor CLI\n");
+        printf("Network Monitor\n");
         printf("Commands:\n");
-        printf("  ping <host>\n");
-        printf("  scan <host> <port>\n");
-        printf("  monitor [count]          - Start monitoring (default: 10 samples)\n");
-        printf("  report [file]            - Generate statistics report from log file\n");
-        printf("  stats [file]             - Show detailed statistics\n");
-        printf("  exit\n");
-        printf("\n> ");
         fgets(cmd, sizeof(cmd), stdin);
 
+        // ping case
         if (strncmp(cmd, "ping", 4) == 0) {
             char host[256];
             sscanf(cmd, "ping %s", host);
 
             double rtt;
-            if (icmp_ping(host, &rtt) == 0)
-                printf("RTT = %.2f ms\n", rtt);
-            else
-                printf("Ping failed\n");
-
-        } else if (strncmp(cmd, "scan", 4) == 0) {
+            if (icmp_ping(host, &rtt) == 0) printf("RTT = %.2f ms\n", rtt);
+            else printf("Ping failed\n");
+        } // scan port case
+        else if (strncmp(cmd, "scan", 4) == 0) {
             char host[256];
             int port;
             sscanf(cmd, "scan %s %d", host, &port);
 
             int st = scan_port(host, port);
             printf("Port %d is %d\n", port, st);
-
-        } else if (strncmp(cmd, "monitor", 7) == 0) {
+        } // monitor case
+        else if (strncmp(cmd, "monitor", 7) == 0) {
 
             // read host config file
             host_entry_t hosts[100];
@@ -167,16 +153,16 @@ int main() {
             }
             
             monitor_record_t records[1000];
-            size_t count = data_store_load(filepath, records, 1000);
+            size_t cnt = dataload(filepath, records, 1000);
             
-            if (count == 0) {
+            if (cnt == 0) {
                 printf("No records found in %s\n", filepath);
             } else {
                 ping_stats_t stats;
-                data_generate_report(records, count, &stats);
+                datareport(records, cnt, &stats);
                 printf("\n=== Monitoring Report ===\n");
-                printf("Total records: %zu\n", count);
-                stats_print(&stats);
+                printf("Total records: %zu\n", cnt);
+                statsPrint(&stats);
             }
 
         } else if (strncmp(cmd, "stats", 5) == 0) {
@@ -193,34 +179,28 @@ int main() {
             }
             
             monitor_record_t records[1000];
-            size_t count = data_store_load(filepath, records, 1000);
+            size_t cnt = dataload(filepath, records, 1000);
             
-            if (count == 0) {
+            if (cnt == 0) {
                 printf("No records found in %s\n", filepath);
             } else {
                 printf("\n=== Detailed Statistics ===\n");
-                printf("Total records: %zu\n\n", count);
+                printf("Total records: %zu\n\n", cnt);
                 
-                for (size_t i = 0; i < count && i < 10; i++) {
+                for (size_t i = 0; i < cnt && i < 10; i++) {
                     struct tm *tm_info = localtime(&records[i].timestamp);
                     char time_str[64];
                     strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
                     
-                    printf("[%s] %s: RTT=%.2f ms, Status=%s\n",
-                           time_str,
-                           records[i].hostname,
-                           records[i].rtt_ms,
-                           records[i].ping_success ? "OK" : "FAIL");
+                    printf("[%s] %s: RTT=%.2f ms, Status=%s\n", time_str, records[i].hostname, records[i].rtt_ms, records[i].ping_success ? "OK" : "FAIL");
                 }
                 
-                if (count > 10) {
-                    printf("... (%zu more records)\n", count - 10);
-                }
+                if (cnt > 10) printf("... (%zu more records)\n", cnt - 10);
                 
                 ping_stats_t stats;
-                data_generate_report(records, count, &stats);
+                datareport(records, cnt, &stats);
                 printf("\n");
-                stats_print(&stats);
+                statsPrint(&stats);
             }
 
         } else if (strncmp(cmd, "exit", 4) == 0) {
