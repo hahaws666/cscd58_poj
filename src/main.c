@@ -60,6 +60,9 @@ int main() {
             int port;
             sscanf(cmd, "scan %s %d", host, &port);
             int ans = scan_port(host, port);
+            if (ans == 1) printf("Port is open\n");
+            else if (ans == 2) printf("Port is closed\n");
+            else printf("Port is unknown or there is an error\n");
         } // monitor case
         else if (strncmp(cmd, "monitor", 7) == 0) {
             // read host config file

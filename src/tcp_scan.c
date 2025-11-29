@@ -16,11 +16,13 @@ int scan_port(const char *host, int port) {
     struct addrinfo *res;
     char portbuf[16];
     snprintf(portbuf, sizeof(portbuf), "%d", port);
+    // so sad to realize we must need intialize to 0 for every addrinfo
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     // https://elixir.bootlin.com/linux/v6.11.6/source/drivers/tty/serial/8250/8250_port.c#L54
     // cannnot find address information
-    printf("1111111111111 passing over getaddrinfo...\n");
+    printf("1111111111111 passing before getaddrinfo...\n");
     if (getaddrinfo(host, portbuf, &hints, &res) != 0) return 0;
     printf("1111111111111 passing over getaddrinfo...\n");
     int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -35,10 +37,12 @@ int scan_port(const char *host, int port) {
     }
     // https://man7.org/linux/man-pages/man2/select.2.html
     fd_set wfds;
+    // https://linux.die.net/man/3/
     FD_ZERO(&wfds);
     FD_SET(sockfd, &wfds);
     // https://man7.org/linux/man-pages/man3/timeval.3type.html
     struct timeval tv;
+    // not sure if we need this?
     tv.tv_sec = 1;
     tv.tv_usec = 0;
     printf("2222222222222222\n");
@@ -49,6 +53,7 @@ int scan_port(const char *host, int port) {
     getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &len);
     close(sockfd);
     freeaddrinfo(res);
+    printf("33333333333333333333 At the end!!!\n");
     if (err == 0) return 1;
     else if (err == ECONNREFUSED) return 2;
     else return 0;

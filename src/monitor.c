@@ -14,7 +14,6 @@ void *monitor_thread(void *arg) {
     host_entry_t *host = ans_args->host;
     int cnt = ans_args->cnt;
     const char *thefile = ans_args->log_file ? ans_args->log_file : "monitor_records.log";
-    
     uptime_tracker_t uptime;
     uptime.start = time(NULL);
     printf("Now we are at the thread of monotor, it is started for %s with %d samples\n", host->hostname, cnt);
@@ -28,7 +27,7 @@ void *monitor_thread(void *arg) {
         else {
             ans2 = -1.0;
         }
-        printf("2222222222222222222\n");
+        printf("2222222222222222222 Now it comes with the attempt coming1\n");
         printf("ATTEMPT %d: PING %s -> %s, %.2f ms\n", cnt, host->hostname, ans ? "OK" : "FAIL", ans2);
         // int ans = (icmp_ping(host->hostname, &rtt) == 0);
         statsUpdate(&host->ping_stats, ans, rtt);
@@ -65,7 +64,7 @@ void *monitor_thread(void *arg) {
         cnt--;
     }
     double uptime_pct = uptime_tracker_percentage(&uptime);
-    printf("End of a monitor, the result is: %.2f%%", uptime_pct);
+    printf("End of a monitor, the result is: %.2f%%\n", uptime_pct);
     fflush(stdout);
     free(ans_args);
     return NULL;
