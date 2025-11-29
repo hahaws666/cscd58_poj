@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define DEFAULT_LOG_FILE "monitor_records.log"
 #define DEFAULT_LOG_FILE_STATS "monitor_records_stat.log"
@@ -30,7 +31,7 @@ int read_host_config(const char *file, host_entry_t *hosts, int mx) {
             host->ports[port_cnt++] = port;
             tok = strtok(NULL, ",");
         }
-        host->port_cnt = port_cnt;
+        host->port_count = port_cnt;
         cnt++;
     }
     fclose(fp);
@@ -40,9 +41,9 @@ int read_host_config(const char *file, host_entry_t *hosts, int mx) {
 int main() {
     // 50 should be enough for this one..
     char cmd[50];
+    printf("Welcome to Network Monitor! Please play around with this\n");
     while(true){
-        printf("Network Monitor\n");
-        printf("Commands:\n");
+        printf("Commands: ");
         fgets(cmd, sizeof(cmd), stdin);
         // ping case
         if (strncmp(cmd, "ping", 4) == 0) {
@@ -89,7 +90,7 @@ int main() {
                 pthread_create(&thread_ids[i], NULL, monitor_thread, ans_args);
             }
             // 等全部结束。。。
-            for (int i = 0; i < threads_created; i++) {
+            for (int i = 0; i < cnt; i++) {
                 pthread_join(thread_ids[i], NULL);
             }
             printf("All monitoring completed.\n");
@@ -116,7 +117,7 @@ int main() {
                     struct tm *tm_info = localtime(&records[i].timestamp);
                     char time_str[64];
                     strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
-                    printf("[%s] %s: RTT=%.2f ms, Status=%s\n", time_str, records[i].hostname, records[i].rtt_ms, records[i].ping_success ? "OK" : "FAIL");
+                    printf("[%s] %s: RTT=%.2f ms, Status=%s\n", time_str, records[i].hostname, records[i].rtt_ms, records[i].ping ? "OK" : "FAIL");
                 }
                 ping_stats_t s;
                 datareport(records, cnt, &s);
@@ -124,7 +125,7 @@ int main() {
                 statsPrint(&s);
             }
 
-        } else if (strcmp(cmd, "exit") == 0) {
+        } else if (strncmp(cmd, "exit", 4) == 0) {
             break;
         }
     }

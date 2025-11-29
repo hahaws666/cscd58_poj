@@ -1,3 +1,6 @@
+// https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply for GNU use
+// since POSIX feature are not enabled by default
+#define _GNU_SOURCE
 #include "monitor.h"
 #include <arpa/inet.h>
 #include <errno.h>
@@ -8,6 +11,8 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <time.h>
+#include <sys/time.h>
+#include <sys/sysinfo.h>
 #include <unistd.h>
 
 // helper function to do the checksum returns checksum
@@ -43,6 +48,7 @@ int icmp_ping(const char *host, double *rtt_ms) {
     // https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
     struct addrinfo hints;
     struct addrinfo *res;
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     if (getaddrinfo(host, NULL, &hints, &res) != 0) return -1;
     // https://pubs.opengroup.org/onlinepubs/009604499/functions/sendto.html

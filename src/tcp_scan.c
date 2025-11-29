@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -10,6 +11,7 @@
 #include "monitor.h"
 
 int scan_port(const char *host, int port) {
+    printf("1111111111111\n");
     struct addrinfo hints;
     struct addrinfo *res;
     char portbuf[16];
@@ -18,15 +20,17 @@ int scan_port(const char *host, int port) {
     hints.ai_socktype = SOCK_STREAM;
     // https://elixir.bootlin.com/linux/v6.11.6/source/drivers/tty/serial/8250/8250_port.c#L54
     // cannnot find address information
+    printf("1111111111111 passing over getaddrinfo...\n");
     if (getaddrinfo(host, portbuf, &hints, &res) != 0) return 0;
+    printf("1111111111111 passing over getaddrinfo...\n");
     int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     fcntl(sockfd, F_SETFL, O_NONBLOCK);
     // connect to socket
-    printf("1111111111111\n");
     int ret = connect(sockfd, res->ai_addr, res->ai_addrlen);
     if (ret == 0) {
         close(sockfd);
         freeaddrinfo(res);
+        printf("Something went wrong in connect!\n");
         return 1;
     }
     // https://man7.org/linux/man-pages/man2/select.2.html
@@ -41,8 +45,8 @@ int scan_port(const char *host, int port) {
     ret = select(sockfd + 1, NULL, &wfds, NULL, &tv);
     printf("33333333333333333333\n");
     int err = 0;
-    //socklen_t len = sizeof(int);
-    getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &(sizeof(err)));
+    socklen_t len = sizeof(int);
+    getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &len);
     close(sockfd);
     freeaddrinfo(res);
     if (err == 0) return 1;

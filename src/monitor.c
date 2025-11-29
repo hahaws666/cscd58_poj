@@ -39,10 +39,10 @@ void *monitor_thread(void *arg) {
         strcpy(record.hostname, host->hostname);
         record.rtt_ms = ans ? rtt : 0.0;
         if (ans) {
-            record.ping_success = 1;
+            record.ping = 1;
         }
-        else record.ping_success = 0;
-        record.port_count = host->port_count;
+        else record.ping = 0;
+        record.cnt = host->port_count;
         for (int i = 0; i < host->port_count; i++) {
             char ans_status[10];
             int st = scan_port(host->hostname, host->ports[i]);
@@ -53,10 +53,10 @@ void *monitor_thread(void *arg) {
             record.port_status[i].status = st;
             printf("PORT %d -> %s\n", host->ports[i], ans_status);
         }
-        printf("Here we go at the data append process...\n")
+        printf("Here we go at the data append process...\n");
         FILE *fp = fopen(thefile, "a");
-        fprintf(fp, "%ld,%s,%d,%.2f,%d", (long) record->timestamp, record->hostname, record->ping, record->rtt_ms, record->cnt);
-        for (int i = 0; i < record->cnt; i++) fprintf(fp, ",%d:%d", record->port_status[i].port, record->port_status[i].status);
+        fprintf(fp, "%ld,%s,%d,%.2f,%d", (long) record.timestamp, record.hostname, record.ping, record.rtt_ms, record.cnt);
+        for (int i = 0; i < record.cnt; i++) fprintf(fp, ",%d:%d", record.port_status[i].port, record.port_status[i].status);
         fprintf(fp, "\n");
         // close the file
         fclose(fp);

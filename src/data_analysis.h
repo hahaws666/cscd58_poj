@@ -29,8 +29,8 @@ typedef struct {
     double mn_time;
 } alert_config_t;
 //Returns number of records loaded.
-size_t dataload(const char *path, monitor_record_t *records, size_t mx);
-void datareport(const monitor_record_t *records, size_t cnt, ping_stats_t *s);
+size_t dataload(const char *file, monitor_record_t *records, size_t mx);
+void datareport(monitor_record_t *records, size_t cnt, ping_stats_t *s);
 // refactor these two later...
 void uptime_tracker_update(uptime_tracker_t *tracker, int is_up);
 double uptime_tracker_percentage(const uptime_tracker_t *tracker);
