@@ -7,12 +7,13 @@
 #include <time.h>
 #include <unistd.h>
 
+// thanks to C69 for doing the multi-thread stuffs
 void *monitor_thread(void *arg) {
     printf("111111 Now we are monitoring\n");
     monitor_args_t *args = (monitor_args_t *)arg;
     host_entry_t *host = args->host;
     int cnt = args->cnt;
-    const char *thefile = args->log_file ? args->log_file : "records.log";
+    const char *thefile = args->log_file ? args->log_file : "monitor_records.log";
     
     uptime_tracker_t uptime;
     uptime.start = time(NULL);
@@ -32,7 +33,6 @@ void *monitor_thread(void *arg) {
         // int ans = (icmp_ping(host->hostname, &rtt) == 0);
         statsUpdate(&host->ping_stats, ans, rtt);
         uptime_tracker_update(&uptime, ans);
-
         // Now we need to record it
         monitor_record_t record;
         record.timestamp = time(NULL);
@@ -44,17 +44,24 @@ void *monitor_thread(void *arg) {
         else record.ping_success = 0;
         record.port_count = host->port_count;
         for (int i = 0; i < host->port_count; i++) {
-            int theport = host->ports[i];
             char ans_status[10];
-            int st = scan_port(host->hostname, theport);
-            if (st == PORT_OPEN) strcpy(ans_status, "OPEN\0");
-            else if (st == PORT_CLOSED) strcpy(ans_status, "CLOSED\0");
+            int st = scan_port(host->hostname, host->ports[i]);
+            if (st == 1) strcpy(ans_status, "OPEN\0");
+            else if (st == 2) strcpy(ans_status, "CLOSED\0");
             else strcpy(ans_status, "TIMEOUT\0");
-            record.port_status[i].port = theport;
-            record.port_status[i].status = (port_status_t)st;
-            printf("PORT %d -> %s\n", theport, ans_status);
+            record.port_status[i].port = host->ports[i];
+            record.port_status[i].status = st;
+            printf("PORT %d -> %s\n", host->ports[i], ans_status);
         }
-        dataappend(thefile, &record);
+        printf("Here we go at the data append process...\n")
+        File *fp = fopen(thefile, "a");
+        fprintf(fp, "%ld, %s, %d, %.2f, %d", (long)record->timestamp, record->hostname, record->ping, record->rtt_ms, record->cnt);
+        for (int i = 0; i < record->cnt; i++) {
+            fprintf(fp, ",%d: %d", record->port_status[i].port, (int)record->port_status[i].status);
+        }
+        fprintf(fp, "\n");
+        // close the file
+        fclose(fp);
         // maybe we will need to change this later for different values
         sleep(2);  // 每 2 秒监控一次
         cnt--;

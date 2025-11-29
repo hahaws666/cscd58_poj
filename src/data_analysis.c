@@ -3,22 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// return -1 if failed 0 if success
-int dataappend(const char *file, const monitor_record_t *record) {
-    printf("Now we are at the data append process\n");
-    FILE *fp = fopen(file, "a");
-    if (!fp) return -1;
-    fprintf(fp, "%ld, %s, %d, %.2f, %d", (long)record->timestamp, record->hostname, record->ping, record->rtt_ms, record->cnt);
-
-    for (int i = 0; i < record->cnt; i++) {
-        fprintf(fp, ",%d: %d", record->port_status[i].port, (int)record->port_status[i].status);
-    }
-    fputc('\n', fp);
-    // close the file for closing
-    fclose(fp);
-    return 0;
-}
-
 // return the size of loaded
 size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
     printf("Now we are at the data loading process\n");
@@ -28,7 +12,7 @@ size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
     size_t ans = 0;
     while (ans < mx && fgets(line, sizeof(line), fp)) {
         char *token = strtok(line, ",\n");
-        monitor_record_t ans_record = {0};
+        monitor_record_t ans_record;
         printf("Split the input by comma\n");
         // 8.8.8.8 80,443
         // 1.1.1.1 53
@@ -49,10 +33,7 @@ size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
             int status = 0;
             if (sscanf(token, "%d:%d", &port, &status) == 2) {
                 ans_record.port_status[i].port = port;
-                // 更新状态
-                if (status < PORT_UNKNOWN) status = PORT_UNKNOWN;
-                if (status > PORT_TIMEOUT) status = PORT_TIMEOUT;
-                ans_record.port_status[i].status = (port_status_t)status;
+                ans_record.port_status[i].status = status;
             }
         }
         records[ans++] = ans_record;
@@ -65,10 +46,10 @@ size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
 void datareport(const monitor_record_t *records, size_t cnt, ping_stats_t *s) {
     s->total_sent = 0;
     s->total_received = 0;
-    s->last_rtt_ms = 0.0;
-    s->min_rtt_ms = 1e9;
-    s->max_rtt_ms = 0.0;
-    s->sum_rtt_ms = 0.0;
+    s->last_rtt = 0.0;
+    s->mn_rtt = 1e9;
+    s->mx_rtt = 0.0;
+    s->sum_rtt = 0.0;
     s->loss_rate = 0.0;
     for (size_t i = 0; i < cnt; i++) {
         monitor_record_t *ans_record = &records[i];
@@ -79,18 +60,19 @@ void datareport(const monitor_record_t *records, size_t cnt, ping_stats_t *s) {
 void uptime_tracker_update(uptime_tracker_t *tracker, int up) {
     // get the current time
     time_t now = time(NULL);
-    int ans = (up ? 1 : 0);
+    int ans = 0;
+    if (up != 0) ans = 1;
     // set the start time if not set before
     if (tracker->start == 0) {
         tracker->start = now;
-        tracker->last_change = now;
-        tracker->current_state = ans;
+        tracker->last = now;
+        tracker->cur = ans;
     }
     if (ans) tracker->up++;
     else tracker->down++;
-    if (tracker->current_state != ans) {
-        tracker->current_state = ans;
-        tracker->last_change = now;
+    if (tracker->cur != ans) {
+        tracker->cur = ans;
+        tracker->last = now;
     }
 }
 

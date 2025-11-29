@@ -27,52 +27,36 @@ static uint16_t cksum(void *buf, int len) {
     sum += (sum >> 16);
     return ~sum;
 }
-
-
 // function that to the icmp ping stuffs
 int icmp_ping(const char *host, double *rtt_ms) {
-    // https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
-    struct addrinfo hints = {0}, *res;
-    hints.ai_family = AF_INET;
-
-    if (getaddrinfo(host, NULL, &hints, &res) != 0) return -1;
-
-    int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-
     char sendbuf[64];
+    // https://sites.uclouvain.be/SystInfo/usr/include/netinet/ip_icmp.h.html
     struct icmphdr *icmp = (struct icmphdr *)sendbuf;
-    memset(sendbuf, 0, 64);
-
     // fill in information for icmp
     icmp->type = ICMP_ECHO;
     icmp->code = 0;
     icmp->un.echo.id = htons(getpid() & 0xFFFF);
     icmp->un.echo.sequence = htons(1);
     icmp->checksum = cksum(icmp, sizeof(struct icmphdr));
-
+    int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     // https://man7.org/linux/man-pages/man3/clock_gettime.3.html
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
-
-    ssize_t sent = sendto(sockfd, sendbuf, sizeof(struct icmphdr), 0, res->ai_addr, res->ai_addrlen);
-    // if sent is failed
-    if (sent < 0) {
-        close(sockfd);
-        return -1;
-    }
-
+    // https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
+    struct addrinfo hints;
+    struct addrinfo *res;
+    hints.ai_family = AF_INET;
+    if (getaddrinfo(host, NULL, &hints, &res) != 0) return -1;
+    sendto(sockfd, sendbuf, sizeof(struct icmphdr), 0, res->ai_addr, res->ai_addrlen);
     char recvbuf[1024];
     struct sockaddr_in reply_addr;
     socklen_t reply_len = sizeof(reply_addr);
-
     struct timeval tv;
     tv.tv_sec = 1;
-    tv.tv_sec = 0;
+    tv.tv_usec = 0;
     // https://pubs.opengroup.org/onlinepubs/009695099/functions/setsockopt.html
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
     ssize_t n = recvfrom(sockfd, recvbuf, sizeof(recvbuf), 0, (struct sockaddr *)&reply_addr, &reply_len);
-
     clock_gettime(CLOCK_MONOTONIC, &t2);
     // RTT measurement formulas
     *rtt_ms = (t2.tv_sec - t1.tv_sec) * 1000.0 + (t2.tv_nsec - t1.tv_nsec) / 1e6;

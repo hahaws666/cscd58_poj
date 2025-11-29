@@ -5,10 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 #include "monitor.h"
-
-/*
- * Historical data for a single monitoring sample.
- */
+// monitor data
 typedef struct {
     char hostname[256];
     time_t timestamp;
@@ -17,43 +14,25 @@ typedef struct {
     int cnt;
     int ping;
 } monitor_record_t;
-
-/*
- * Keeps track of uptime information.
- */
+// uptime info
 typedef struct {
     time_t start;
-    time_t last_change;
+    time_t last;
     uint64_t up;
     uint64_t down;
-    int current_state; // 1 = up, 0 = down
+    int cur; //1 =up 0 = down
 } uptime_tracker_t;
-
-/*
- * Threshold configuration for alerting.
- */
+// alert config
 typedef struct {
     double mx_latency;
     double mx_loss;
     double mn_time;
 } alert_config_t;
-
-/*
- * Returns 0 on success.
- */
-int dataappend(const char *path, const monitor_record_t *record);
-
-/*
- * Returns number of records loaded.
- */
+//Returns number of records loaded.
 size_t dataload(const char *path, monitor_record_t *records, size_t mx);
-
-void datareport(const monitor_record_t *records, size_t count, ping_stats_t *out_stats);
-
+void datareport(const monitor_record_t *records, size_t cnt, ping_stats_t *s);
+// refactor these two later...
 void uptime_tracker_update(uptime_tracker_t *tracker, int is_up);
-
 double uptime_tracker_percentage(const uptime_tracker_t *tracker);
-
-int alert_check_trigger(const alert_config_t *config, const ping_stats_t *stats, double current_latency_ms, double uptime_pct, char *message_buf, size_t message_len);
-
-#endif /* DATA_ANALYSIS_H */
+int alert_check_trigger(const alert_config_t *config, const ping_stats_t *s, double late, double time, char *record, size_t len);
+#endif

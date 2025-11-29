@@ -5,45 +5,31 @@
 #include <string.h>
 
 #define DEFAULT_LOG_FILE "monitor_records.log"
+#define DEFAULT_LOG_FILE_STATS "monitor_records_stat.log"
+#define DEFAULT_LOG_FILE_REPORT "monitor_records_report.log"
 #define MX 65535
 #define SIZE 512
-
-
-/*
- * Read a given file one by one line and then record each line's info to hostname
- * what is returned is how many hosts are loaded
- */
+// Read a given file one by one line and then record each line's info to hostname what is returned is how many hosts are loaded
+// hopefully fixed at 2025/11/28
 int read_host_config(const char *file, host_entry_t *hosts, int mx) {
     FILE *fp = fopen(file, "r");
     char line[SIZE];
     int cnt = 0;
-    while (cnt < mx && fgets(line, sizeof(line), fp)) {
+    while (cnt < mx && fgets(line, SIZE, fp)) {
         host_entry_t *host = &hosts[cnt];
-        memset(host, 0, sizeof(host_entry_t));
-        char hostname[256];
-        char port_str[256];
-
-        // Split by space or tab
-        if (sscanf(line, "%255s %255s", hostname, port_str) != 2) {
-            // Try to parse without ports (hostname only)
-            if (sscanf(line, "%255s", hostname) == 1) {
-                strncpy(host->hostname, hostname, sizeof(host->hostname) - 1);
-                host->port_cnt = 0;
-                cnt++;
-            }
-            continue;
-        }
+        // https://www.geeksforgeeks.org/c/strchr-in-c/
+        char *start_pos = strchr(line, ' ');
+        *start_pos = '\0';
         printf("debug noe copy to host name\n");
-        strncpy(host->hostname, hostname, sizeof(host->hostname) - 1);
+        strncpy(host->hostname, line, sizeof(host->hostname) - 1);
         host->hostname[sizeof(host->hostname) - 1] = '\0';
-        char *token = strtok(port_str, ",");
+        char *tok = strtok(start_pos + 1, ",");
         int port_cnt = 0;
-        while (token && port_cnt < 32) {
-            int port = atoi(token);
+        while (tok && port_cnt < 32) {
+            int port = atoi(tok);
             host->ports[port_cnt++] = port;
-            token = strtok(NULL, ",");
+            tok = strtok(NULL, ",");
         }
-
         host->port_cnt = port_cnt;
         cnt++;
     }
@@ -51,57 +37,59 @@ int read_host_config(const char *file, host_entry_t *hosts, int mx) {
     return cnt;
 }
 
-
-
 int main() {
-    char cmd[100];
-    while (1) {
+    // 50 should be enough
+    char cmd[50];
+    while(true){
         printf("Network Monitor\n");
         printf("Commands:\n");
         fgets(cmd, sizeof(cmd), stdin);
-
         // ping case
-        if (strcmp(cmd, "ping") == 0) {
+        if (strncmp(cmd, "ping", 4) == 0) {
             char host[256];
             sscanf(cmd, "ping %s", host);
-
             double rtt;
-            if (icmp_ping(host, &rtt) == 0) printf("RTT = %.2f ms\n", rtt);
-            else printf("Ping failed\n");
+            if (icmp_ping(host, &rtt) == 0) {
+                printf("RTT = %.2f ms\n", rtt);
+            }
+            else printf("Ping failed, please check your connection\n");
         } // scan port case
-        else if (strcmp(cmd, "scan") == 0) {
+        else if (strncmp(cmd, "scan", 4) == 0) {
             char host[256];
             int port;
             sscanf(cmd, "scan %s %d", host, &port);
             int ans = scan_port(host, port);
         } // monitor case
-        else if (strcmp(cmd, "monitor") == 0) {
+        else if (strncmp(cmd, "monitor", 7) == 0) {
             // read host config file
             host_entry_t hosts[100];
             int cnt = read_host_config("host_config.txt", hosts, 100);
-            int monitor_count = 10;
+            int default_cnt = 10;
             char *ptr = cmd + 7;
-            // go until we find a white space
+            // go until we find a white space so that record the user typed in cnt
             while (*ptr == ' ') ptr++;
+            //if the user typed in a number, we will record the count the user wan
             if (*ptr != '\0') {
-                monitor_count = atoi(ptr);
+                default_cnt = atoi(ptr);
             }
-            
+            // 每个线程的记录
+            // using一些C69知识
             pthread_t thread_ids[100];
-            int threads_created = start_monitoring(hosts, cnt, monitor_count, DEFAULT_LOG_FILE, thread_ids);
             for (int i = 0; i < cnt; i++) {
                 monitor_args_t *ans_args = malloc(sizeof(monitor_args_t));
-                args->host = &hosts[i];
-                args->cnt = monitor_count;
-                args->log_file = DEFAULT_LOG_FILE;
+                ans_args->host = &hosts[i];
+                ans_args->cnt = default_cnt;
+                ans_args->log_file = DEFAULT_LOG_FILE;
+                // 初始化
                 hosts[i].ping_stats.total_sent = 0.0;
                 hosts[i].ping_stats.total_received = 0;
-                hosts[i].ping_stats.last_rtt_ms = 0.0;
-                hosts[i].ping_stats.min_rtt_ms = 1e9;
-                hosts[i].ping_stats.max_rtt_ms = 0.0;
-                hosts[i].ping_stats.sum_rtt_ms = 0.0;
+                hosts[i].ping_stats.last_rtt = 0.0;
+                hosts[i].ping_stats.mn_rtt = 1e9;
+                hosts[i].ping_stats.mx_rtt = 0.0;
+                hosts[i].ping_stats.sum_rtt = 0.0;
                 hosts[i].ping_stats.loss_rate = 0.0;
-                pthread_create(&thread_ids[i], NULL, monitor_thread, args);
+                // 创建线程
+                pthread_create(&thread_ids[i], NULL, monitor_thread, ans_args);
             }
 
             // 等全部结束。。。
@@ -111,55 +99,28 @@ int main() {
             
             printf("All monitoring completed.\n");
 
-        } else if (strcmp(cmd, "report") == 0) {
-            char *ptr = cmd + 6;
-            while (*ptr == ' ') ptr++;
-            const char *log_file = (*ptr != '\n' && *ptr != '\0') ? ptr : DEFAULT_LOG_FILE;
-            
-            // Remove trailing newline
-            char filepath[256];
-            strncpy(filepath, log_file, sizeof(filepath) - 1);
-            filepath[sizeof(filepath) - 1] = '\0';
-            size_t n = strlen(filepath);
-            if (n > 0 && filepath[n - 1] == '\n') {
-                filepath[n - 1] = '\0';
-            }
-            
+        } else if (strcmp(cmd, "report") == 0) {            
             monitor_record_t records[1000];
-            size_t cnt = dataload(filepath, records, 1000);
-            
-            if (cnt == 0) {
-                printf("No records found in %s\n", filepath);
-            } else {
-                ping_stats_t stats;
-                datareport(records, cnt, &stats);
-                printf("\n=== Monitoring Report ===\n");
-                printf("Total records: %zu\n", cnt);
-                statsPrint(&stats);
+            size_t cnt = dataload(DEFAULT_LOG_FILE_REPORT, records, 1000);
+            if (cnt == 0) printf("No records found in %s\n", DEFAULT_LOG_FILE_REPORT);
+            else {
+                ping_stats_t s;
+                datareport(records, cnt, &s);
+                printf("Debuging the monitor report....\n");
+                printf("Total number of record is: %zu\n", cnt);
+                printf("Detailed stats of report coming below.....\n");
+                statsPrint(&s);
             }
 
-        } else if (strcmp(cmd, "stats") == 0) {
-            char *ptr = cmd + 5;
-            while (*ptr == ' ') ptr++;
-            const char *log_file = (*ptr != '\n' && *ptr != '\0') ? ptr : DEFAULT_LOG_FILE;
-            
-            char filepath[256];
-            strncpy(filepath, log_file, sizeof(filepath) - 1);
-            filepath[sizeof(filepath) - 1] = '\0';
-            size_t len = strlen(filepath);
-            if (len > 0 && filepath[len - 1] == '\n') {
-                filepath[len - 1] = '\0';
-            }
-            
+        } else if (strcmp(cmd, "stats") == 0) {            
             monitor_record_t records[1000];
-            size_t cnt = dataload(filepath, records, 1000);
+            size_t cnt = dataload(DEFAULT_LOG_FILE_STATS, records, 1000);
             
             if (cnt == 0) {
-                printf("No records found in %s\n", filepath);
+                printf("No records found in %s\n", DEFAULT_LOG_FILE_STATS);
             } else {
-                printf("\n=== Detailed Statistics ===\n");
-                printf("Total records: %zu\n\n", cnt);
-                
+                printf("Now we are at the stats part\n");
+                printf("Total number of record is: %zu\n\n", cnt);
                 for (size_t i = 0; i < cnt && i < 10; i++) {
                     struct tm *tm_info = localtime(&records[i].timestamp);
                     char time_str[64];
@@ -169,11 +130,10 @@ int main() {
                 }
                 
                 if (cnt > 10) printf("... (%zu more records)\n", cnt - 10);
-                
-                ping_stats_t stats;
-                datareport(records, cnt, &stats);
+                ping_stats_t s;
+                datareport(records, cnt, &s);
                 printf("\n");
-                statsPrint(&stats);
+                statsPrint(&s);
             }
 
         } else if (strcmp(cmd, "exit") == 0) {
