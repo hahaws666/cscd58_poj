@@ -7,17 +7,13 @@
 size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
     printf("Now we are at the data loading process\n");
     FILE *fp = fopen(file, "r");
-    if (!fp) return -1;
+    if (!fp) return 0;
     char line[1024];
     size_t ans = 0;
     while (ans < mx && fgets(line, sizeof(line), fp)) {
         char *token = strtok(line, ",\n");
         monitor_record_t ans_record;
-        printf("Split the input by comma\n");
-        // 8.8.8.8 80,443
-        // 1.1.1.1 53
-        // www.google.com 80
-        // 192.168.56.1 22,8080
+        printf("Split the input by comma or newline \n");
         ans_record.timestamp = (time_t)strtol(token, NULL, 10);
         token = strtok(NULL, ",\n");
         strncpy(ans_record.hostname, token, sizeof(ans_record.hostname) - 1);
@@ -36,14 +32,14 @@ size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
                 ans_record.port_status[i].status = status;
             }
         }
-        records[ans++] = ans_record;
+        records[ans] = ans_record;
+        ans++;
     }
-
     fclose(fp);
     return ans;
 }
 
-void datareport(const monitor_record_t *records, size_t cnt, ping_stats_t *s) {
+void datareport(monitor_record_t *records, size_t cnt, ping_stats_t *s) {
     s->total_sent = 0;
     s->total_received = 0;
     s->last_rtt = 0.0;
@@ -80,29 +76,5 @@ double uptime_tracker_percentage(const uptime_tracker_t *tracker) {
     uint64_t total = tracker->up + tracker->down;
     if (total == 0) return 0.0;
     return (double)tracker->up * 100.0 / (double)total;
-}
-
-// return 1 if something is triggered else return 0
-int alert_check_trigger(const alert_config_t *config, const ping_stats_t *s, double late, double time, char *record, size_t len) {
-    int ans = 0;
-    size_t res = 0;
-    record[0] = '\0';
-    if (late > config->mx_latency) {
-        printf("The latency report:\n");
-        res += snprintf(record + res, len - res, "Latency %.2fms exceeds by %.2fms.", late, config->mx_latency);
-        ans = 1;
-    }
-    if (s->loss_rate > config->mx_loss) {
-        printf("The loss results report:\n");
-        res += snprintf(record + res, len - res, "Loss %.2f%% exceeds by that much: %.2f%%.", s->loss_rate * 100.0, config->mx_loss * 100.0);
-        ans = 1;
-    }
-    if (time < config->min_time) {
-        printf("The time report:\n");
-        res += snprintf(record + res, len - res, "Uptime %.2f%% is below by %.2f%%. ", time, config->min_time);
-        ans = 1;
-    }
-    if (!ans) snprintf(record, len, "Everything is good");
-    return ans;
 }
 

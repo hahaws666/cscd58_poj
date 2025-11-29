@@ -10,11 +10,9 @@ This is Our CSCD58 project, Network Monitoring System. It is a simple network mo
 ## Some important functionalities
 
 ### Monitoring Capabilities
-- Multi-host monitoring: Concurrent monitoring of multiple hosts using threads
 - Ping: ICMP ping just like ping command based on raw socket
-- TCP port scanning: Non-blocking TCP port scanning to check service availability
+- Port scanning: We will scan the tcp port to see if it is available
 - Late measurement: Our measurement is based on RTT tracking with all kind of stats
-- Packet loss calculation: Automatic packet loss rate computation
 
 ### Data Management
 - **Historical data storage**: Automatically persist monitoring records to log files during monitoring
@@ -82,3 +80,6 @@ https://pubs.opengroup.org/onlinepubs/009695099/functions/setsockopt.html
 https://man7.org/linux/man-pages/man2/select.2.html
 https://elixir.bootlin.com/linux/v6.11.6/source/drivers/tty/serial/8250/8250_port.c#L54
 https://sites.uclouvain.be/SystInfo/usr/include/netinet/ip_icmp.h.html
+https://pubs.opengroup.org/onlinepubs/009604499/functions/sendto.html
+https://en.cppreference.com/w/c/chrono/timespec
+https://man7.org/linux/man-pages/man3/sscanf.3.html

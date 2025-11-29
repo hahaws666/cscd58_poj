@@ -1,6 +1,5 @@
 #ifndef MONITOR_H
 #define MONITOR_H
-
 #include <stdint.h>
 #include <netinet/in.h>
 #include <pthread.h>

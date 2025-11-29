@@ -34,5 +34,4 @@ void datareport(const monitor_record_t *records, size_t cnt, ping_stats_t *s);
 // refactor these two later...
 void uptime_tracker_update(uptime_tracker_t *tracker, int is_up);
 double uptime_tracker_percentage(const uptime_tracker_t *tracker);
-int alert_check_trigger(const alert_config_t *config, const ping_stats_t *s, double late, double time, char *record, size_t len);
 #endif

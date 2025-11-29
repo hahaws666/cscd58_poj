@@ -10,10 +10,10 @@
 // thanks to C69 for doing the multi-thread stuffs
 void *monitor_thread(void *arg) {
     printf("111111 Now we are monitoring\n");
-    monitor_args_t *args = (monitor_args_t *)arg;
-    host_entry_t *host = args->host;
-    int cnt = args->cnt;
-    const char *thefile = args->log_file ? args->log_file : "monitor_records.log";
+    monitor_args_t *ans_args = (monitor_args_t *)arg;
+    host_entry_t *host = ans_args->host;
+    int cnt = ans_args->cnt;
+    const char *thefile = ans_args->log_file ? ans_args->log_file : "monitor_records.log";
     
     uptime_tracker_t uptime;
     uptime.start = time(NULL);
@@ -54,11 +54,9 @@ void *monitor_thread(void *arg) {
             printf("PORT %d -> %s\n", host->ports[i], ans_status);
         }
         printf("Here we go at the data append process...\n")
-        File *fp = fopen(thefile, "a");
-        fprintf(fp, "%ld, %s, %d, %.2f, %d", (long)record->timestamp, record->hostname, record->ping, record->rtt_ms, record->cnt);
-        for (int i = 0; i < record->cnt; i++) {
-            fprintf(fp, ",%d: %d", record->port_status[i].port, (int)record->port_status[i].status);
-        }
+        FILE *fp = fopen(thefile, "a");
+        fprintf(fp, "%ld,%s,%d,%.2f,%d", (long) record->timestamp, record->hostname, record->ping, record->rtt_ms, record->cnt);
+        for (int i = 0; i < record->cnt; i++) fprintf(fp, ",%d:%d", record->port_status[i].port, record->port_status[i].status);
         fprintf(fp, "\n");
         // close the file
         fclose(fp);
@@ -66,11 +64,10 @@ void *monitor_thread(void *arg) {
         sleep(2);  // 每 2 秒监控一次
         cnt--;
     }
-    
     double uptime_pct = uptime_tracker_percentage(&uptime);
     printf("End of a monitor, the result is: %.2f%%", uptime_pct);
     fflush(stdout);
-    free(args);
+    free(ans_args);
     return NULL;
 }
 
