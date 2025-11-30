@@ -102,12 +102,18 @@ int main() {
             size_t cnt = dataload(DEFAULT_LOG_FILE_REPORT, records, 1000);
             if (cnt == 0) printf("No records found in %s\n", DEFAULT_LOG_FILE_REPORT);
             else {
-                ping_stats_t s;
-                datareport(records, cnt, &s);
-                printf("Debuging the monitor report....\n");
-                printf("Total number of record is: %zu\n", cnt);
-                printf("Detailed stats of report coming below.....\n");
-                statsPrint(&s);
+                int sent, received;
+                double last_rtt, mn_rtt, mx_rtt, avg, loss_rate;
+                datareport(records, cnt, &sent, &received, &last_rtt, &mn_rtt, &mx_rtt, &avg, &loss_rate);
+                printf("11Debuging the monitor report....\n");
+                printf("Total record #: %zu\n", cnt);
+                printf("Total sent: %d\n", sent);
+                printf("Total received: %d\n", received);
+                printf("Loss rate: %.2f%%\n", loss_rate);
+                printf("Last RTT: %.2f ms\n", last_rtt);
+                printf("Min RTT: %.2f ms\n", mn_rtt);
+                printf("Max RTT: %.2f ms\n", mx_rtt);
+                printf("Avg RTT: %.2f ms\n", avg);
             }
         } else if (strcmp(cmd, "stats") == 0) {            
             monitor_record_t records[1000];
@@ -115,17 +121,26 @@ int main() {
             if (cnt == 0) printf("No records found in %s\n", DEFAULT_LOG_FILE_STATS);
             else {
                 printf("Now we are at the stats part\n");
-                printf("Total number of record is: %zu\n\n", cnt);
+                printf("Total number of record is: %zu\n", cnt);
                 for (size_t i = 0; i < cnt && i < 10; i++) {
-                    struct tm *tm_info = localtime(&records[i].timestamp);
+                    // A usefule time struct in c
+                    // https://man7.org/linux/man-pages/man3/tm.3type.html
+                    struct tm *ans_time = localtime(&records[i].timestamp);
                     char time_str[64];
-                    strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
-                    printf("[%s] %s: RTT=%.2f ms, Status=%s\n", time_str, records[i].hostname, records[i].rtt_ms, records[i].ping ? "OK" : "FAIL");
+                    strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", ans_time);
+                    printf("Time is: %s, host is: %s, RTT: %.2f ms, status: %s\n", time_str, records[i].hostname, records[i].rtt_ms, (records[i].ping ? "OK" : "FAIL"));
                 }
-                ping_stats_t s;
-                datareport(records, cnt, &s);
+                int sent, received;
+                double last_rtt, mn_rtt, mx_rtt, avg, loss_rate;
+                datareport(records, cnt, &sent, &received, &last_rtt, &mn_rtt, &mx_rtt, &avg, &loss_rate);
                 printf("\n");
-                statsPrint(&s);
+                printf("Total sent: %d\n", sent);
+                printf("Total received: %d\n", received);
+                printf("Loss rate: %.2f%%\n", loss_rate);
+                printf("Last RTT: %.2f ms\n", last_rtt);
+                printf("Min RTT: %.2f ms\n", mn_rtt);
+                printf("Max RTT: %.2f ms\n", mx_rtt);
+                printf("Avg RTT: %.2f ms\n", avg);
             }
 
         } else if (strncmp(cmd, "exit", 4) == 0) {

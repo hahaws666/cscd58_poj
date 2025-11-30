@@ -83,4 +83,5 @@ https://sites.uclouvain.be/SystInfo/usr/include/netinet/ip_icmp.h.html
 https://pubs.opengroup.org/onlinepubs/009604499/functions/sendto.html
 https://en.cppreference.com/w/c/chrono/timespec
 https://man7.org/linux/man-pages/man3/sscanf.3.html
-https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply 
+https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply
+https://man7.org/linux/man-pages/man3/tm.3type.html

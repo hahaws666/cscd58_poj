@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 // thanks to C69 for doing the multi-thread stuffs
+// and sorry for the messy debug info printed....
 void *monitor_thread(void *arg) {
     printf("111111 Now we are monitoring\n");
     monitor_args_t *ans_args = (monitor_args_t *)arg;
@@ -32,7 +33,15 @@ void *monitor_thread(void *arg) {
         printf("2222222222222222222 Now it comes with the attempt coming1\n");
         printf("ATTEMPT %d: PING %s -> %s, %.2f ms\n", cnt, host->hostname, ans ? "OK" : "FAIL", ans2);
         // int ans = (icmp_ping(host->hostname, &rtt) == 0);
-        statsUpdate(&host->ping_stats, ans, rtt);
+        host->total_sent++;
+        if (ans) {
+            host->total_received++;
+            host->last_rtt = rtt;
+            if (rtt < host->mn_rtt) host->mn_rtt = rtt;
+            if (rtt > host->mx_rtt) host->mx_rtt = rtt;
+            host->sum_rtt += rtt;
+        }
+        host->loss_rate = 1.0 - (double)host->total_received / (double)host->total_sent;
         // Now we need to record it
         monitor_record_t record;
         record.timestamp = time(NULL);
@@ -51,9 +60,9 @@ void *monitor_thread(void *arg) {
             else strcpy(ans_status, "TIMEOUT\0");
             record.ports[i] = host->ports[i];
             record.status[i] = ans_scan;
-            printf("PORT %d -> %s\n", host->ports[i], ans_status);
+            printf("PORT %d with a status of: %s\n", host->ports[i], ans_status);
         }
-        printf("Here we go at the data append process...\n");
+        printf("3333 Here we go at the data append process...\n");
         FILE *fp = fopen(thefile, "a");
         fprintf(fp, "%ld,%s,%d,%.2f,%d", (long) record.timestamp, record.hostname, record.ping, record.rtt_ms, record.cnt);
         for (int i = 0; i < record.cnt; i++) fprintf(fp, ",%d:%d", record.ports[i], record.status[i]);

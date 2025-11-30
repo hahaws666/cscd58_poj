@@ -11,7 +11,7 @@
 #include "monitor.h"
 
 int scan_port(const char *host, int port) {
-    printf("1111111111111\n");
+    printf("1111111111111 start of scan port!!\n");
     struct addrinfo hints;
     struct addrinfo *res;
     char portbuf[16];
@@ -45,7 +45,7 @@ int scan_port(const char *host, int port) {
     // not sure if we need this?
     tv.tv_sec = 1;
     tv.tv_usec = 0;
-    printf("2222222222222222\n");
+    printf("2222222222222222 now we go to the select socket again\n");
     ret = select(sockfd + 1, NULL, &wfds, NULL, &tv);
     printf("33333333333333333333\n");
     int err = 0;

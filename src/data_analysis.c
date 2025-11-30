@@ -5,7 +5,7 @@
 
 // return the size of loaded
 size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
-    printf("Now we are at the data loading process\n");
+    printf("Now we are at the data loading(reading) process\n");
     FILE *fp = fopen(file, "r");
     if (!fp) return 0;
     char line[1024];
@@ -39,17 +39,36 @@ size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
     return ans;
 }
 
-void datareport(monitor_record_t *records, size_t cnt, ping_stats_t *s) {
-    s->total_sent = 0;
-    s->total_received = 0;
-    s->last_rtt = 0.0;
-    s->mn_rtt = 1e9;
-    s->mx_rtt = 0.0;
-    s->sum_rtt = 0.0;
-    s->loss_rate = 0.0;
+void datareport(monitor_record_t *records, size_t cnt, int *sent, int *received, double *last_rtt, double *mn_rtt, double *mx_rtt, double *avg, double *loss_rate) {
+    int tot = 0;
+    int ans = 0;
+    double last = 0.0;
+    double mn = 1e9;
+    double mx = 0.0;
+    double s = 0.0;
     for (size_t i = 0; i < cnt; i++) {
         monitor_record_t *ans_record = &records[i];
-        statsUpdate(s, ans_record->ping, ans_record->rtt_ms);
+        tot++;
+        if (ans_record->ping) {
+            ans++;
+            last = ans_record->rtt_ms;
+            if (ans_record->rtt_ms < mn) mn = ans_record->mn_rtt;
+            if (ans_record->rtt_ms > mx) mx = ans_record->mx_rtt;
+            s += ans_record->rtt_ms;
+        }
     }
+    double ans_avg;
+    if (ans) ans_avg = s / (double) tot;
+    else ans_avg = 0.0;
+    double ans_loss;
+    if (tot) ans_loss = (double)(tot - ans) / (double) tot;
+    else ans_loss = 0.0;
+    *sent = tot;
+    *received = ans;
+    *last_rtt = last;
+    *mn_rtt = mn;
+    *mx_rtt = mx;
+    *avg = ans_avg;
+    *loss_rate = ans_loss;
 }
 

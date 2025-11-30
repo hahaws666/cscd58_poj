@@ -1,4 +1,4 @@
-// https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply for GNU use
+// https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply a nice article for GNU use
 // since POSIX feature are not enabled by default
 #define _GNU_SOURCE
 #include "monitor.h"
@@ -21,7 +21,8 @@ static uint16_t cksum(void *buf, int len) {
     uint32_t ans = 0;
     uint16_t *length = buf;
     while (len > 1) {
-        ans += *length++;
+        ans += *length;
+        *length++;
         len -= 2;
     }
     if (len == 1) ans += *(uint8_t *)length;
@@ -49,10 +50,13 @@ int icmp_ping(const char *host, double *rtt_ms) {
     // https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
     struct addrinfo hints;
     struct addrinfo *res;
+    // we must initialize to 0 for addrinfo!!!
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
+    // will make the host into an IP address
     if (getaddrinfo(host, NULL, &hints, &res) != 0) return -1;
     // https://pubs.opengroup.org/onlinepubs/009604499/functions/sendto.html
+    // now we will send the icmp packet over raw socket
     sendto(sockfd, sendbuf, sizeof(struct icmphdr), 0, res->ai_addr, res->ai_addrlen);
     char recvbuf[1024];
     struct sockaddr_in reply_addr;
@@ -61,6 +65,7 @@ int icmp_ping(const char *host, double *rtt_ms) {
     tv.tv_sec = 1;
     tv.tv_usec = 0;
     // https://pubs.opengroup.org/onlinepubs/009695099/functions/setsockopt.html
+    // set a receive timeout
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
     ssize_t n = recvfrom(sockfd, recvbuf, sizeof(recvbuf), 0, (struct sockaddr *)&reply_addr, &reply_len);
     clock_gettime(CLOCK_MONOTONIC, &ans2);

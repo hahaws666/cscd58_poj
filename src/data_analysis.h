@@ -17,5 +17,5 @@ typedef struct {
 } monitor_record_t;
 //Returns number of records loaded.
 size_t dataload(const char *file, monitor_record_t *records, size_t mx);
-void datareport(monitor_record_t *records, size_t cnt, ping_stats_t *s);
+void datareport(monitor_record_t *records, size_t cnt, int *sent, int *received, double *last_rtt, double *mn_rtt, double *mx_rtt, double *avg, double *loss_rate);
 #endif
