@@ -41,6 +41,7 @@ int icmp_ping(const char *host, double *rtt_ms) {
     ans_icmp->un.echo.sequence = htons(1);
     ans_icmp->checksum = cksum(ans_icmp, sizeof(struct icmphdr));
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    if (sockfd < 0) return -1;
     // https://en.cppreference.com/w/c/chrono/timespec
     // https://man7.org/linux/man-pages/man3/clock_gettime.3.html
     struct timespec ans1, ans2;

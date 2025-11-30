@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <netinet/in.h>
 #include <pthread.h>
+// sorry for the kind of meessy struct below...
 // Ping统计信息，对应的包括RTT、丢包等
 typedef struct {
     int total_sent;
@@ -13,18 +14,12 @@ typedef struct {
     double sum_rtt; //总和，主要用来计算avg
     double loss_rate; //丢包率
 } ping_stats_t;
-// 每个端口的历史状态
-typedef struct {
-    int port;
-    int status;
-} port_stats_t;
 // 主机配置and监控数据
 typedef struct {
     char hostname[256];
     int ports[32];
     int port_count;
     ping_stats_t ping_stats;
-    port_stats_t port_status[32];
 } host_entry_t;
 typedef struct {
     host_entry_t *host; // 第 i 个 host 的地址

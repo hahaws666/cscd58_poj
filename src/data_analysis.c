@@ -28,8 +28,8 @@ size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
             int port = 0;
             int status = 0;
             if (sscanf(token, "%d:%d", &port, &status) == 2) {
-                ans_record.port_status[i].port = port;
-                ans_record.port_status[i].status = status;
+                ans_record.ports[i] = port;
+                ans_record.status[i] = status;
             }
         }
         records[ans] = ans_record;
@@ -51,30 +51,5 @@ void datareport(monitor_record_t *records, size_t cnt, ping_stats_t *s) {
         monitor_record_t *ans_record = &records[i];
         statsUpdate(s, ans_record->ping, ans_record->rtt_ms);
     }
-}
-
-void uptime_tracker_update(uptime_tracker_t *tracker, int up) {
-    // get the current time
-    time_t now = time(NULL);
-    int ans = 0;
-    if (up != 0) ans = 1;
-    // set the start time if not set before
-    if (tracker->start == 0) {
-        tracker->start = now;
-        tracker->last = now;
-        tracker->cur = ans;
-    }
-    if (ans) tracker->up++;
-    else tracker->down++;
-    if (tracker->cur != ans) {
-        tracker->cur = ans;
-        tracker->last = now;
-    }
-}
-
-double uptime_tracker_percentage(const uptime_tracker_t *tracker) {
-    uint64_t total = tracker->up + tracker->down;
-    if (total == 0) return 0.0;
-    return (double)tracker->up * 100.0 / (double)total;
 }
 

@@ -1,5 +1,3 @@
-# 编译器
-# gcc
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c11 -g
 LDFLAGS = -lpthread
