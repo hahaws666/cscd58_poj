@@ -7,4 +7,4 @@ all: $(TARGET)
 $(TARGET): $(SRCS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 clean:
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -rf $(TARGET)

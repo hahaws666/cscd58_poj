@@ -26,14 +26,22 @@ int scan_port(const char *host, int port) {
     if (getaddrinfo(host, portbuf, &hints, &res) != 0) return 0;
     printf("1111111111111 passing over getaddrinfo...\n");
     int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sockfd < 0) return 0;
     fcntl(sockfd, F_SETFL, O_NONBLOCK);
     // connect to socket
     int ret = connect(sockfd, res->ai_addr, res->ai_addrlen);
     if (ret == 0) {
         close(sockfd);
         freeaddrinfo(res);
-        printf("Something went wrong in connect!\n");
         return 1;
+    }
+    if (ret < 0 && errno != EINPROGRESS) {
+        close(sockfd);
+        freeaddrinfo(res);
+        if (errno == ECONNREFUSED) return 2;
+        else {
+            return 0;
+        }
     }
     // https://man7.org/linux/man-pages/man2/select.2.html
     fd_set wfds;
@@ -47,10 +55,19 @@ int scan_port(const char *host, int port) {
     tv.tv_usec = 0;
     printf("2222222222222222 now we go to the select socket again\n");
     ret = select(sockfd + 1, NULL, &wfds, NULL, &tv);
+    if (ret <= 0) {
+        close(sockfd);
+        freeaddrinfo(res);
+        return 0;
+    }
     printf("33333333333333333333\n");
     int err = 0;
     socklen_t len = sizeof(int);
-    getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &len);
+    if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &len)) {
+        close(sockfd);
+        freeaddrinfo(res);
+        return 0;
+    }
     close(sockfd);
     freeaddrinfo(res);
     printf("33333333333333333333 At the end!!!\n");

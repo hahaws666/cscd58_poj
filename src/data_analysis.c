@@ -52,8 +52,8 @@ void datareport(monitor_record_t *records, size_t cnt, int *sent, int *received,
         if (ans_record->ping) {
             ans++;
             last = ans_record->rtt_ms;
-            if (ans_record->rtt_ms < mn) mn = ans_record->mn_rtt;
-            if (ans_record->rtt_ms > mx) mx = ans_record->mx_rtt;
+            if (ans_record->rtt_ms < mn) mn = ans_record->rtt_ms;
+            if (ans_record->rtt_ms > mx) mx = ans_record->rtt_ms;
             s += ans_record->rtt_ms;
         }
     }

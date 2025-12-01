@@ -62,7 +62,7 @@ int main() {
             int ans = scan_port(host, port);
             if (ans == 1) printf("Port is open\n");
             else if (ans == 2) printf("Port is closed\n");
-            else printf("Port is unknown or there is an error\n");
+            else printf("Port is timeout ot unknown or there is an error\n");
         } // monitor case
         else if (strncmp(cmd, "monitor", 7) == 0) {
             // read host config file
@@ -82,13 +82,13 @@ int main() {
                 ans_args->cnt = default_cnt;
                 ans_args->log_file = DEFAULT_LOG_FILE;
                 // 初始化
-                hosts[i].ping_stats.total_sent = 0.0;
-                hosts[i].ping_stats.total_received = 0;
-                hosts[i].ping_stats.last_rtt = 0.0;
-                hosts[i].ping_stats.mn_rtt = 1e9;
-                hosts[i].ping_stats.mx_rtt = 0.0;
-                hosts[i].ping_stats.sum_rtt = 0.0;
-                hosts[i].ping_stats.loss_rate = 0.0;
+                hosts[i].total_sent = 0.0;
+                hosts[i].total_received = 0;
+                hosts[i].last_rtt = 0.0;
+                hosts[i].mn_rtt = 1e9;
+                hosts[i].mx_rtt = 0.0;
+                hosts[i].sum_rtt = 0.0;
+                hosts[i].loss_rate = 0.0;
                 // 创建线程
                 pthread_create(&thread_ids[i], NULL, monitor_thread, ans_args);
             }
@@ -97,7 +97,7 @@ int main() {
                 pthread_join(thread_ids[i], NULL);
             }
             printf("All monitoring completed.\n");
-        } else if (strcmp(cmd, "report") == 0) {            
+        } else if (strncmp(cmd, "report", 6) == 0) {            
             monitor_record_t records[1000];
             size_t cnt = dataload(DEFAULT_LOG_FILE_REPORT, records, 1000);
             if (cnt == 0) printf("No records found in %s\n", DEFAULT_LOG_FILE_REPORT);
@@ -115,7 +115,7 @@ int main() {
                 printf("Max RTT: %.2f ms\n", mx_rtt);
                 printf("Avg RTT: %.2f ms\n", avg);
             }
-        } else if (strcmp(cmd, "stats") == 0) {            
+        } else if (strncmp(cmd, "stats", 5) == 0) {            
             monitor_record_t records[1000];
             size_t cnt = dataload(DEFAULT_LOG_FILE_STATS, records, 1000);
             if (cnt == 0) printf("No records found in %s\n", DEFAULT_LOG_FILE_STATS);
