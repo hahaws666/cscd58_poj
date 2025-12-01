@@ -4,7 +4,6 @@
 #include <netinet/in.h>
 #include <pthread.h>
 // sorry for the kind of meessy struct below...
-// 主机配置and监控数据
 typedef struct {
     char hostname[256];
     int ports[32];
@@ -22,7 +21,6 @@ typedef struct {
     int cnt;
     const char *log_file; // It is designed to be optional, log file path
 } monitor_args_t;
-// 成功的话会返回0，这个是一个ICMP ping
 int icmp_ping(const char *host, double *rtt_ms);
 // PORT扫描
 int scan_port(const char *host, int port);
