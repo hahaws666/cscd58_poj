@@ -14,7 +14,7 @@ void *monitor_thread(void *arg) {
     monitor_args_t *ans_args = (monitor_args_t *)arg;
     host_entry_t *host = ans_args->host;
     int cnt = ans_args->cnt;
-    const char *thefile = ans_args->log_file ? ans_args->log_file : "monitor_records.log";
+    const char *thefile = ans_args->log_file;
     int tot = 0;
     int up = 0;
     printf("Now we are at the thread of monotor, it is started for %s with %d samples\n", host->hostname, cnt);
@@ -28,10 +28,11 @@ void *monitor_thread(void *arg) {
         double ans2;
         if (ans) ans2 = rtt;
         else {
+            // printf("4444 it means failure ans2 = -1.0")
             ans2 = -1.0;
         }
         // printf("2222222222222222222 Now it comes with the attempt coming1\n");
-        printf("ATTEMPT %d: PING %s -> %s, %.2f ms\n", cnt, host->hostname, ans ? "OK" : "FAIL", ans2);
+        printf("PING %s with status of: %s, %.2f ms\n", host->hostname, ans ? "OK" : "FAIL", ans2);
         // int ans = (icmp_ping(host->hostname, &rtt) == 0);
         host->total_sent++;
         if (ans) {
@@ -65,18 +66,17 @@ void *monitor_thread(void *arg) {
         //printf("3333 Here we go at the data append process...\n");
         FILE *fp = fopen(thefile, "a");
         fprintf(fp, "%ld,%s,%d,%.2f,%d", (long) record.timestamp, record.hostname, record.ping, record.rtt_ms, record.cnt);
-        for (int i = 0; i < record.cnt; i++) fprintf(fp, ",%d:%d", record.ports[i], record.status[i]);
+        for (int i = 0; i < record.cnt; i++) fprintf(fp, ",%d: %d", record.ports[i], record.status[i]);
         fprintf(fp, "\n");
         // close the file
         fclose(fp);
         // maybe we will need to change this later for different values
-        sleep(2);  // 每 2 秒监控一次
+        sleep(2);  //每2秒监控一次
         cnt--;
     }
     double ans_uptime = (double)up * 100.0 / (double)tot;
-    printf("End of a monitor, the result is: %.2f%%\n", ans_uptime);
+    printf("End of a monitor, the result is: %.2f\n", ans_uptime);
     fflush(stdout);
     free(ans_args);
     return NULL;
 }
-

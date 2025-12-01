@@ -20,7 +20,7 @@ typedef struct {
 typedef struct {
     host_entry_t *host;
     int cnt;
-    const char *log_file; // Optional, log file path
+    const char *log_file; // It is designed to be optional, log file path
 } monitor_args_t;
 // 成功的话会返回0，这个是一个ICMP ping
 int icmp_ping(const char *host, double *rtt_ms);

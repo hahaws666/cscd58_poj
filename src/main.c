@@ -44,7 +44,7 @@ int main() {
     printf("Welcome to Network Monitor! Please play around with this\n");
     while(true){
         printf("Commands: ");
-        fgets(cmd, sizeof(cmd), stdin);
+        fgets(cmd, 50, stdin);
         // ping case
         if (strncmp(cmd, "ping", 4) == 0) {
             char host[50];
@@ -90,10 +90,10 @@ int main() {
                 hosts[i].mx_rtt = 0.0;
                 hosts[i].sum_rtt = 0.0;
                 hosts[i].loss_rate = 0.0;
-                // 创建线程
+                //创建线程
                 pthread_create(&thread_ids[i], NULL, monitor_thread, ans_args);
             }
-            // 等全部结束。。。
+            //等全部结束。。。
             for (int i = 0; i < cnt; i++) {
                 pthread_join(thread_ids[i], NULL);
             }
@@ -101,16 +101,16 @@ int main() {
         } else if (strncmp(cmd, "report", 6) == 0) {            
             monitor_record_t records[1000];
             size_t cnt = dataload(DEFAULT_LOG_FILE_REPORT, records, 1000);
-            if (cnt == 0) printf("No records found in %s\n", DEFAULT_LOG_FILE_REPORT);
+            if (cnt == 0) printf("No records in %s\n", DEFAULT_LOG_FILE_REPORT);
             else {
                 int sent, received;
                 double last_rtt, mn_rtt, mx_rtt, avg, loss_rate;
                 datareport(records, cnt, &sent, &received, &last_rtt, &mn_rtt, &mx_rtt, &avg, &loss_rate);
-                printf("11Debuging the monitor report....\n");
+                printf("11111Debuing the monitor report....\n");
                 printf("Total record #: %zu\n", cnt);
                 printf("Total sent: %d\n", sent);
                 printf("Total received: %d\n", received);
-                printf("Loss rate: %.2f%%\n", loss_rate);
+                printf("Loss rate: %.2f%%\n", loss_rate * 100.0);
                 printf("Last RTT: %.2f ms\n", last_rtt);
                 printf("Min RTT: %.2f ms\n", mn_rtt);
                 printf("Max RTT: %.2f ms\n", mx_rtt);
@@ -119,9 +119,9 @@ int main() {
         } else if (strncmp(cmd, "stats", 5) == 0) {            
             monitor_record_t records[1000];
             size_t cnt = dataload(DEFAULT_LOG_FILE_STATS, records, 1000);
-            if (cnt == 0) printf("No records found in %s\n", DEFAULT_LOG_FILE_STATS);
+            if (cnt == 0) printf("No records in %s\n", DEFAULT_LOG_FILE_STATS);
             else {
-                printf("Now we are at the stats part\n");
+                printf("Now we areat the stats part\n");
                 printf("Total number of record is: %zu\n", cnt);
                 for (size_t i = 0; i < cnt && i < 10; i++) {
                     // A usefule time struct in c
@@ -129,7 +129,7 @@ int main() {
                     struct tm *ans_time = localtime(&records[i].timestamp);
                     // 64 should be safe...
                     char time_str[64];
-                    strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", ans_time);
+                    strftime(time_str, sizeof(time_str), "%Y%m%d at %H:%M:%S", ans_time);
                     printf("Time is: %s, host is: %s, RTT: %.2f ms, status: %s\n", time_str, records[i].hostname, records[i].rtt_ms, (records[i].ping ? "OK" : "FAIL"));
                 }
                 int sent, received;
@@ -138,7 +138,7 @@ int main() {
                 printf("\n");
                 printf("Total sent: %d\n", sent);
                 printf("Total received: %d\n", received);
-                printf("Loss rate: %.2f%%\n", loss_rate);
+                printf("Loss rate: %.2f%%\n", loss_rate * 100.0);
                 printf("Last RTT: %.2f ms\n", last_rtt);
                 printf("Min RTT: %.2f ms\n", mn_rtt);
                 printf("Max RTT: %.2f ms\n", mx_rtt);

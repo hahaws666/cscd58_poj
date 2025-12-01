@@ -9,7 +9,6 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include "monitor.h"
-
 int scan_port(const char *host, int port) {
     printf("1111111111111 start of scan port!!\n");
     struct addrinfo hints;
@@ -46,17 +45,17 @@ int scan_port(const char *host, int port) {
         }
     }
     // https://man7.org/linux/man-pages/man2/select.2.html
-    fd_set wfds;
-    // https://linux.die.net/man/3/
-    FD_ZERO(&wfds);
-    FD_SET(sockfd, &wfds);
+    fd_set ans_fd;
+    // https://linux.die.net/man/3/fd_set
+    FD_ZERO(&ans_fd);
+    FD_SET(sockfd, &ans_fd);
     // https://man7.org/linux/man-pages/man3/timeval.3type.html
     struct timeval tv;
     // not sure if we need this?
-    tv.tv_sec = 1;
+    tv.tv_sec = 3;
     tv.tv_usec = 0;
     //printf("2222222222222222 now we go to the select socket again\n");
-    ret = select(sockfd + 1, NULL, &wfds, NULL, &tv);
+    ret = select(sockfd + 1, NULL, &ans_fd, NULL, &tv);
     if (ret <= 0) {
         close(sockfd);
         freeaddrinfo(res);

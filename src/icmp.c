@@ -62,7 +62,7 @@ int icmp_ping(const char *host, double *rtt_ms) {
     struct sockaddr_in reply_addr;
     socklen_t reply_len = sizeof(reply_addr);
     struct timeval tv;
-    tv.tv_sec = 1;
+    tv.tv_sec = 3;
     tv.tv_usec = 0;
     // https://pubs.opengroup.org/onlinepubs/009695099/functions/setsockopt.html
     // set a receive timeout

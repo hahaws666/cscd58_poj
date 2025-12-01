@@ -13,7 +13,7 @@ size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
     while (ans < mx && fgets(line, sizeof(line), fp)) {
         char *token = strtok(line, ",\n");
         monitor_record_t ans_record;
-        printf("Split the input by comma or newline \n");
+        // printf("Split the input by comma or newline \n");
         ans_record.timestamp = (time_t)strtol(token, NULL, 10);
         token = strtok(NULL, ",\n");
         strncpy(ans_record.hostname, token, sizeof(ans_record.hostname) - 1);
@@ -38,7 +38,6 @@ size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
     fclose(fp);
     return ans;
 }
-
 void datareport(monitor_record_t *records, size_t cnt, int *sent, int *received, double *last_rtt, double *mn_rtt, double *mx_rtt, double *avg, double *loss_rate) {
     int tot = 0;
     int ans = 0;
@@ -71,4 +70,3 @@ void datareport(monitor_record_t *records, size_t cnt, int *sent, int *received,
     *avg = ans_avg;
     *loss_rate = ans_loss;
 }
-

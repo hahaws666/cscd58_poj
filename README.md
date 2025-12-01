@@ -165,3 +165,5 @@ https://en.cppreference.com/w/c/chrono/timespec
 https://man7.org/linux/man-pages/man3/sscanf.3.html
 https://stackoverflow.com/questions/5582211/what-does-define-gnu-source-imply
 https://man7.org/linux/man-pages/man3/tm.3type.html
+https://linux.die.net/man/3/fd_set
+https://pubs.opengroup.org/onlinepubs/007904975/functions/fcntl.html
