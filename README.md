@@ -108,18 +108,41 @@ Example output:
 ```bash
 Total record #: 40
 Total sent: 40
-Total received: 40
-Loss rate: 0.00%
-Last RTT: 907.65 ms
-Min RTT: 1.46 ms
-Max RTT: 1051.93 ms
-Avg RTT: 474.51 ms
+Total received: 25
+Loss rate: 0.38%
+Last RTT: 1.28 ms
+Min RTT: 1.28 ms
+Max RTT: 1031.41 ms
+Avg RTT: 96.78 ms
 ```
 **show detailed stats**
 ```bash
 stats
 ```
 Example output:
+```bash
+Now we are at the stats part
+Total number of record is: 40
+Time is: 2025-11-30 20:00:49, host is: 1.1.1.1, RTT: 5.22 ms, status: OK
+Time is: 2025-11-30 20:00:49, host is: www.google.com, RTT: 41.24 ms, status: OK
+Time is: 2025-11-30 20:00:49, host is: 8.8.8.8, RTT: 5.75 ms, status: OK
+Time is: 2025-11-30 20:00:49, host is: 192.168.56.1, RTT: 3.39 ms, status: OK
+Time is: 2025-11-30 20:00:52, host is: www.google.com, RTT: 0.00 ms, status: FAIL
+Time is: 2025-11-30 20:00:52, host is: 1.1.1.1, RTT: 0.00 ms, status: FAIL
+Time is: 2025-11-30 20:00:53, host is: 8.8.8.8, RTT: 0.00 ms, status: FAIL
+Time is: 2025-11-30 20:00:54, host is: 1.1.1.1, RTT: 22.04 ms, status: OK
+Time is: 2025-11-30 20:00:54, host is: www.google.com, RTT: 32.60 ms, status: OK
+Time is: 2025-11-30 20:00:54, host is: 192.168.56.1, RTT: 0.00 ms, status: FAIL
+
+Total sent: 40
+Total received: 25
+Loss rate: 0.38%
+Last RTT: 1.28 ms
+Min RTT: 1.28 ms
+Max RTT: 1031.41 ms
+Avg RTT: 96.78 ms
+```
+The exact time and ping results will be printed
 
 ## File Structures
 We can compile all by MAKEFILE management and all header and c files are stored in `src` directory
