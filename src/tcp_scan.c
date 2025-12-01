@@ -22,19 +22,21 @@ int scan_port(const char *host, int port) {
     hints.ai_socktype = SOCK_STREAM;
     // https://elixir.bootlin.com/linux/v6.11.6/source/drivers/tty/serial/8250/8250_port.c#L54
     // cannnot find address information
-    printf("1111111111111 passing before getaddrinfo...\n");
+    //printf("1111111111111 passing before getaddrinfo...\n");
     if (getaddrinfo(host, portbuf, &hints, &res) != 0) return 0;
-    printf("1111111111111 passing over getaddrinfo...\n");
+    // printf("1111111111111 passing over getaddrinfo...\n");
     int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (sockfd < 0) return 0;
     fcntl(sockfd, F_SETFL, O_NONBLOCK);
     // connect to socket
     int ret = connect(sockfd, res->ai_addr, res->ai_addrlen);
+    // check if we can early return the answer!
     if (ret == 0) {
         close(sockfd);
         freeaddrinfo(res);
         return 1;
     }
+    // sad case
     if (ret < 0 && errno != EINPROGRESS) {
         close(sockfd);
         freeaddrinfo(res);
@@ -53,14 +55,14 @@ int scan_port(const char *host, int port) {
     // not sure if we need this?
     tv.tv_sec = 1;
     tv.tv_usec = 0;
-    printf("2222222222222222 now we go to the select socket again\n");
+    //printf("2222222222222222 now we go to the select socket again\n");
     ret = select(sockfd + 1, NULL, &wfds, NULL, &tv);
     if (ret <= 0) {
         close(sockfd);
         freeaddrinfo(res);
         return 0;
     }
-    printf("33333333333333333333\n");
+    //printf("33333333333333333333\n");
     int err = 0;
     socklen_t len = sizeof(int);
     if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &len)) {

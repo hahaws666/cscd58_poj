@@ -68,6 +68,13 @@ int icmp_ping(const char *host, double *rtt_ms) {
     // set a receive timeout
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
     ssize_t n = recvfrom(sockfd, recvbuf, sizeof(recvbuf), 0, (struct sockaddr *)&reply_addr, &reply_len);
+    // so sad that it is unreachable
+    if (n < 0) {
+        //printf("333333Now we are at timeout..\n");
+        close(sockfd);
+        freeaddrinfo(res);
+        return -1;
+    }
     clock_gettime(CLOCK_MONOTONIC, &ans2);
     // RTT measurement formulas
     *rtt_ms = (ans2.tv_sec - ans1.tv_sec) * 1000.0 + (ans2.tv_nsec - ans1.tv_nsec) / 1e6;

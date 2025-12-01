@@ -21,7 +21,7 @@ int read_host_config(const char *file, host_entry_t *hosts, int mx) {
         // https://www.geeksforgeeks.org/c/strchr-in-c/
         char *start_pos = strchr(line, ' ');
         *start_pos = '\0';
-        printf("debug noe copy to host name\n");
+        // printf("debug noe copy to host name\n");
         strncpy(host->hostname, line, sizeof(host->hostname) - 1);
         host->hostname[sizeof(host->hostname) - 1] = '\0';
         char *tok = strtok(start_pos + 1, ",");
@@ -53,7 +53,7 @@ int main() {
             if (icmp_ping(host, &rtt) == 0) {
                 printf("RTT = %.2f ms\n", rtt);
             }
-            else printf("Ping failed, please check your connection\n");
+            else printf("Ping failed, please check your connection or the target host\n");
         } // scan port case
         else if (strncmp(cmd, "scan", 4) == 0) {
             char host[50];
@@ -72,7 +72,8 @@ int main() {
             // user is able to passed in another param to change this value
             int default_cnt = 10;
             int tmp;
-            if (sscanf(cmd, "monotor %d", &tmp) == 1) default_cnt = tmp;
+            if (sscanf(cmd, "monitor %d", &tmp) == 1) default_cnt = tmp;
+            //printf("the default cnt is %d", default_cnt);
             // 每个线程的记录
             // using一些C69知识
             pthread_t thread_ids[100];
@@ -126,6 +127,7 @@ int main() {
                     // A usefule time struct in c
                     // https://man7.org/linux/man-pages/man3/tm.3type.html
                     struct tm *ans_time = localtime(&records[i].timestamp);
+                    // 64 should be safe...
                     char time_str[64];
                     strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", ans_time);
                     printf("Time is: %s, host is: %s, RTT: %.2f ms, status: %s\n", time_str, records[i].hostname, records[i].rtt_ms, (records[i].ping ? "OK" : "FAIL"));
@@ -144,6 +146,7 @@ int main() {
             }
 
         } else if (strncmp(cmd, "exit", 4) == 0) {
+            printf("BYE BYE!!\n");
             break;
         }
     }

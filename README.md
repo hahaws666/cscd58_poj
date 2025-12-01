@@ -119,15 +119,17 @@ Avg RTT: 474.51 ms
 ```bash
 stats
 ```
+Example output:
 
 ## File Structures
 We can compile all by MAKEFILE management and all header and c files are stored in `src` directory
+The `src` directory have all the header and c code files, while with some seperating files contains different functions, for example monitor is for multi-threading report and tcp scan will do the port scanning.
 
 ## Clean the executable
 ```bash
 make clean
 ```
-
+## What to improve in the future?
 ## References
 https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
 https://man7.org/linux/man-pages/man3/clock_gettime.3.html

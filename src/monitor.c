@@ -30,7 +30,7 @@ void *monitor_thread(void *arg) {
         else {
             ans2 = -1.0;
         }
-        printf("2222222222222222222 Now it comes with the attempt coming1\n");
+        // printf("2222222222222222222 Now it comes with the attempt coming1\n");
         printf("ATTEMPT %d: PING %s -> %s, %.2f ms\n", cnt, host->hostname, ans ? "OK" : "FAIL", ans2);
         // int ans = (icmp_ping(host->hostname, &rtt) == 0);
         host->total_sent++;
@@ -62,7 +62,7 @@ void *monitor_thread(void *arg) {
             record.status[i] = ans_scan;
             printf("PORT %d with a status of: %s\n", host->ports[i], ans_status);
         }
-        printf("3333 Here we go at the data append process...\n");
+        //printf("3333 Here we go at the data append process...\n");
         FILE *fp = fopen(thefile, "a");
         fprintf(fp, "%ld,%s,%d,%.2f,%d", (long) record.timestamp, record.hostname, record.ping, record.rtt_ms, record.cnt);
         for (int i = 0; i < record.cnt; i++) fprintf(fp, ",%d:%d", record.ports[i], record.status[i]);
