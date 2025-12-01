@@ -14,7 +14,6 @@ void *monitor_thread(void *arg) {
     monitor_args_t *ans_args = (monitor_args_t *)arg;
     host_entry_t *host = ans_args->host;
     int cnt = ans_args->cnt;
-    const char *thefile = ans_args->log_file;
     int tot = 0;
     int up = 0;
     printf("Now we are at the thread of monotor, it is started for %s with %d samples\n", host->hostname, cnt);
@@ -64,7 +63,7 @@ void *monitor_thread(void *arg) {
             printf("PORT %d with a status of: %s\n", host->ports[i], ans_status);
         }
         //printf("3333 Here we go at the data append process...\n");
-        FILE *fp = fopen(thefile, "a");
+        FILE *fp = fopen(ans_args->log_file, "a");
         fprintf(fp, "%ld,%s,%d,%.2f,%d", (long) record.timestamp, record.hostname, record.ping, record.rtt_ms, record.cnt);
         for (int i = 0; i < record.cnt; i++) fprintf(fp, ",%d: %d", record.ports[i], record.status[i]);
         fprintf(fp, "\n");

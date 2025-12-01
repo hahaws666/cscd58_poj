@@ -15,7 +15,7 @@ int scan_port(const char *host, int port) {
     struct addrinfo *res;
     char portbuf[16];
     snprintf(portbuf, sizeof(portbuf), "%d", port);
-    // so sad to realize we must need intialize to 0 for every addrinfo
+    // taking so much time debug to realize we must need intialize to 0 for every addrinfo
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;

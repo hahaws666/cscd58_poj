@@ -19,6 +19,7 @@ int read_host_config(const char *file, host_entry_t *hosts, int mx) {
     while (cnt < mx && fgets(line, SIZE, fp)) {
         host_entry_t *host = &hosts[cnt];
         // https://www.geeksforgeeks.org/c/strchr-in-c/
+        // printf("222222222my design is intend to seperate host and port by a single space\n");
         char *start_pos = strchr(line, ' ');
         *start_pos = '\0';
         // printf("debug noe copy to host name\n");
