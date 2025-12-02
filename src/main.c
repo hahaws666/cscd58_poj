@@ -39,15 +39,50 @@ int read_host_config(const char *file, host_entry_t *hosts, int mx) {
     return cnt;
 }
 
+// Helper to append a new host to the config file
+void append_host_to_config(const char *host, const char *ports) {
+    FILE *fp = fopen("host_config.txt", "a");
+    if (!fp) {
+        perror("Error opening config file");
+        return;
+    }
+    fprintf(fp, "%s %s\n", host, ports);
+    fclose(fp);
+    printf("Successfully added host: %s\n", host);
+}
+
+// Helper to show current configuration
+void show_config() {
+    FILE *fp = fopen("host_config.txt", "r");
+    if (!fp) {
+        printf("Config file not found (host_config.txt).\n");
+        return;
+    }
+    
+    printf("--- Current Host Configuration ---\n");
+    char line[256];
+    int i = 1;
+    while (fgets(line, sizeof(line), fp)) {
+        if (strlen(line) > 1) {
+            printf("%d. %s", i++, line);
+        }
+    }
+    printf("----------------------------------\n");
+    fclose(fp);
+}
+
 void print_help() {
     printf("\n--- Available Commands ---\n");
     printf("  ping <host>            : Ping a host (e.g., ping google.com)\n");
-    printf("  scan <host> <port>     : Check if a port is open (e.g., scan google.com 80)\n");
+    printf("  scan <host> <port>     : Check a specific port (e.g., scan google.com 80)\n");
+    printf("  scan <host>            : Scan common ports (e.g., scan google.com)\n");
     printf("  monitor [count]        : Monitor hosts from config file (default 10 times)\n");
     printf("  report                 : Generate summary report from logs\n");
     printf("  stats                  : Show detailed statistics from logs\n");
+    printf("  add <host> <ports>     : Add a new host (e.g., add 10.0.0.1 80,443)\n");
+    printf("  show                   : Show current list of monitored hosts\n");
     printf("  exit                   : Exit the program\n");
-    printf("--------------------------\n\n");
+    printf("--------------------------\n");
 }
 
 void handle_command_view(const char *cmd) {
@@ -77,13 +112,53 @@ int main() {
             else printf("Ping failed, please check your connection or the target host\n");
         } // scan port case
         else if (strncmp(cmd, "scan", 4) == 0) {
-            char host[50];
+            handle_command_view(cmd);
+            char host[100];
             int port;
-            sscanf(cmd, "scan %s %d", host, &port);
-            int ans = scan_port(host, port);
-            if (ans == 1) printf("Port is open\n");
-            else if (ans == 2) printf("Port is closed\n");
-            else printf("Port is timeout ot unknown or there is an error\n");
+            
+            // Check how many arguments were parsed
+            int args = sscanf(cmd, "scan %s %d", host, &port);
+
+            if (args == 2) {
+                //Specific Port
+                printf("Scanning %s : %d...\n", host, port);
+                int ans = scan_port(host, port);
+                if (ans == 1) printf(">> Port %d is OPEN\n", port);
+                else if (ans == 2) printf(">> Port %d is CLOSED\n", port);
+                else printf(">> Port %d status is UNKNOWN/TIMEOUT\n", port);
+
+            } else if (args == 1) {
+                // No Port Specified -> Scan Common Ports
+                printf("No port specified. Scanning common ports for %s...\n", host);
+                printf("This may take a few seconds depending on network speed.\n");
+                printf("---------------------------------------------------\n");
+
+                // List of most common TCP ports to check
+                int common_ports[] = {21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445, 993, 995, 3306, 3389, 8080};
+                int num_ports = sizeof(common_ports) / sizeof(common_ports[0]);
+                int open_count = 0;
+
+                for (int i = 0; i < num_ports; i++) {
+                    int p = common_ports[i];
+                    printf("Checking %d...\r", p); 
+                    fflush(stdout); 
+
+                    int ans = scan_port(host, p);
+                    if (ans == 1) {
+                        printf("  [+] Port %-5d : OPEN     \n", p);
+                        open_count++;
+                    }
+                }
+                
+                printf("                                   \r");
+                if (open_count == 0) printf("Scan complete. No common open ports found.\n");
+                else printf("Scan complete. Found %d open ports.\n", open_count);
+
+            } else {
+                printf("Usage:\n");
+                printf("  scan <host> <port>  : Check specific port\n");
+                printf("  scan <host>         : Check common ports\n");
+            }
         } // monitor case
         else if (strncmp(cmd, "monitor", 7) == 0) {
             // read host config file
@@ -168,7 +243,22 @@ int main() {
                 printf("Avg RTT: %.2f ms\n", avg);
             }
 
-        } else if (strncmp(cmd, "exit", 4) == 0) {
+        } else if (strncmp(cmd, "add", 3) == 0) {
+            handle_command_view(cmd);
+            char host[100];
+            char ports[100];
+            
+            if (sscanf(cmd, "add %s %s", host, ports) == 2) {
+                append_host_to_config(host, ports);
+            } else {
+                printf("Usage: add <host> <ports>\n");
+                printf("Example: add 192.168.1.5 22,80\n");
+            }
+        } else if (strncmp(cmd, "show", 4) == 0) {
+            handle_command_view(cmd);
+            show_config();
+        }
+         else if (strncmp(cmd, "exit", 4) == 0) {
             printf("BYE BYE!!\n");
             break;
         } else if (strncmp(cmd, "help", 4) == 0) {
