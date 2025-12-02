@@ -209,7 +209,7 @@ int main() {
                     start_index = 0; // Start from beginning
                 } else {
                     printf("Detailed Statistics (Last 10 records):\n");
-                    // Default:show only last 10
+                    // show only last 10
                     start_index = (cnt > 10) ? (cnt - 10) : 0;
                 }
                 for (size_t i = start_index; i < cnt; i++) {
