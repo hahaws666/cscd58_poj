@@ -94,9 +94,11 @@ int main() {
             sscanf(cmd, "ping %s", host);
             double rtt;
             if (icmp_ping(host, &rtt) == 0) {
-                printf("RTT = %.2f ms\n", rtt);
+                printf("%sRTT = %.2f ms%s\n", COLOR_GREEN, rtt, COLOR_RESET);
             }
-            else printf("Ping failed, please check your connection or the target host\n");
+            else {
+                printf("%sPing failed, please check your connection or the target host%s\n", COLOR_RED, COLOR_RESET);
+            }
         } // scan port case
         else if (strncmp(cmd, "scan", 4) == 0) {
             handle_command_view(cmd);

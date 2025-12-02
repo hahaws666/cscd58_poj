@@ -65,21 +65,20 @@ void *monitor_thread(void *arg) {
         pthread_mutex_lock(&print_lock);
         printf("---------------------------------------------------\n");
         printf("REPORT: %s\n", host->hostname);
-        double ans2;
         if (ans) {
-            ans2 = rtt;
             if (rtt > ALERT_RTT_THRESHOLD) {
                 printf("%s[WARNING] High Latency detected on %s: %.2f ms (Threshold: %.0f ms)%s\n", 
                         COLOR_YELLOW, host->hostname, rtt, ALERT_RTT_THRESHOLD, COLOR_RESET);
             } else {
-                printf("PING Status: SUCCESS (%.2f ms) | Jitter: %.2f ms\n", rtt, host->last_jitter);
+                printf("PING Status: %sSUCCESS%s (%.2f ms) | Jitter: %.2f ms\n", 
+                       COLOR_GREEN, COLOR_RESET, rtt, host->last_jitter);
             }
         }
         else {
             // printf("4444 it means failure ans2 = -1.0")
             printf("%s[CRITICAL ALERT] Host %s is DOWN!%s\n", 
                     COLOR_RED, host->hostname, COLOR_RESET);
-            printf("PING Status: FAIL\n");
+            printf("PING Status: %sFAIL%s\n", COLOR_RED, COLOR_RESET);
         }
         // printf("2222222222222222222 Now it comes with the attempt coming1\n");
         // printf("PING %s with status of: %s, %.2f ms\n", host->hostname, ans ? "SUCCESS!" : "FAIL!", ans ? ans2 : 0.0);
