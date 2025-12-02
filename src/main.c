@@ -128,7 +128,7 @@ int main() {
                     // A usefule time struct in c
                     // https://man7.org/linux/man-pages/man3/tm.3type.html
                     struct tm *ans_time = localtime(&records[i].timestamp);
-                    printf("Time is: %04d%02d%02d %02d:%02d:%02d, host is: %s, RTT: %.2f ms, status: %s\n", ans_time->tm_year + 1900, ans_time->tm_mon + 1, ans_time->tm_mday, ans_time->tm_hour, ans_time->tm_min, ans_time->tm_sec, records[i].hostname, records[i].rtt_ms, (records[i].ping ? "SUCESS!" : "FAIL!"));
+                    printf("Time is: %04d-%02d-%02d %02d:%02d:%02d, host is: %s, RTT: %.2f ms, status: %s\n", ans_time->tm_year + 1900, ans_time->tm_mon + 1, ans_time->tm_mday, ans_time->tm_hour, ans_time->tm_min, ans_time->tm_sec, records[i].hostname, records[i].rtt_ms, (records[i].ping ? "SUCESS!" : "FAIL!"));
                 }
                 int sent, received;
                 double last_rtt, mn_rtt, mx_rtt, avg, loss_rate;

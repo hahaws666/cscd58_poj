@@ -106,14 +106,14 @@ report
 ```
 Example output:
 ```bash
-Total record #: 40
-Total sent: 40
-Total received: 25
-Loss rate: 0.38%
-Last RTT: 1.28 ms
-Min RTT: 1.28 ms
-Max RTT: 1031.41 ms
-Avg RTT: 96.78 ms
+Total record #: 12
+Total sent: 12
+Total received: 10
+Loss rate: 16.67%
+Last RTT: 1.39 ms
+Min RTT: 1.39 ms
+Max RTT: 2068.02 ms
+Avg RTT: 258.74 ms
 ```
 **show detailed stats**
 ```bash
