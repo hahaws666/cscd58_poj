@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include "monitor.h"
 int scan_port(const char *host, int port) {
-    printf("1111111111111 start of scan port!!\n");
+    // printf("1111111111111 start of scan port!!\n");
     struct addrinfo hints;
     struct addrinfo *res;
     char portbuf[16];
@@ -71,7 +71,7 @@ int scan_port(const char *host, int port) {
     }
     close(sockfd);
     freeaddrinfo(res);
-    printf("33333333333333333333 At the end!!!\n");
+    // printf("33333333333333333333 At the end!!!\n");
     if (err == 0) return 1;
     else if (err == ECONNREFUSED) return 2;
     else return 0;

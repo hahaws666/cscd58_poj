@@ -34,6 +34,7 @@ static uint16_t cksum(void *buf, int len) {
 int icmp_ping(const char *host, double *rtt_ms) {
     char sendbuf[64];
     // https://sites.uclouvain.be/SystInfo/usr/include/netinet/ip_icmp.h.html
+    memset(sendbuf, 0, sizeof(sendbuf));
     struct icmphdr *ans_icmp = (struct icmphdr *)sendbuf;
     // fill in information for icmp
     ans_icmp->type = ICMP_ECHO;
@@ -42,7 +43,10 @@ int icmp_ping(const char *host, double *rtt_ms) {
     ans_icmp->un.echo.sequence = htons(1);
     ans_icmp->checksum = cksum(ans_icmp, sizeof(struct icmphdr));
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (sockfd < 0) return -1;
+    if (sockfd < 0) {
+        perror("Socket Creation Failed");
+        return -1;
+    }
     // https://en.cppreference.com/w/c/chrono/timespec
     // https://man7.org/linux/man-pages/man3/clock_gettime.3.html
     struct timespec ans1, ans2;
@@ -54,10 +58,20 @@ int icmp_ping(const char *host, double *rtt_ms) {
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     // will make the host into an IP address
-    if (getaddrinfo(host, NULL, &hints, &res) != 0) return -1;
+    int err = getaddrinfo(host, NULL, &hints, &res);
+    if (err != 0) {
+        fprintf(stderr, "DNS Error: %s\n", gai_strerror(err));
+        return -1;
+    }
     // https://pubs.opengroup.org/onlinepubs/009604499/functions/sendto.html
     // now we will send the icmp packet over raw socket
     sendto(sockfd, sendbuf, sizeof(struct icmphdr), 0, res->ai_addr, res->ai_addrlen);
+    if (sendto(sockfd, sendbuf, sizeof(struct icmphdr), 0, res->ai_addr, res->ai_addrlen) < 0) {
+         perror("Sendto Failed"); 
+         close(sockfd);
+         freeaddrinfo(res);
+         return -1;
+    }
     char recvbuf[1024];
     struct sockaddr_in reply_addr;
     socklen_t reply_len = sizeof(reply_addr);

@@ -5,7 +5,7 @@
 
 // return the size of loaded
 size_t dataload(const char *file, monitor_record_t *records, size_t mx) {
-    printf("Now we are at the data loading(reading) process\n");
+    // printf("Now we are at the data loading(reading) process\n");
     FILE *fp = fopen(file, "r");
     if (!fp) return 0;
     char line[1024];

@@ -3,6 +3,14 @@
 #include <stdint.h>
 #include <netinet/in.h>
 #include <pthread.h>
+
+#define ALERT_RTT_THRESHOLD 200.0 
+#define ALERT_LOSS_THRESHOLD 0.20
+
+#define COLOR_RED     "\x1b[31m"
+#define COLOR_YELLOW  "\x1b[33m"
+#define COLOR_RESET   "\x1b[0m"
+
 // sorry for the kind of meessy struct below...
 typedef struct {
     char hostname[256];

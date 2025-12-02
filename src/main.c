@@ -6,8 +6,8 @@
 #include <stdbool.h>
 
 #define DEFAULT_LOG_FILE "monitor_records.log"
-#define DEFAULT_LOG_FILE_STATS "monitor_records_stat.log"
-#define DEFAULT_LOG_FILE_REPORT "monitor_records_report.log"
+#define DEFAULT_LOG_FILE_STATS "monitor_records.log"
+#define DEFAULT_LOG_FILE_REPORT "monitor_records.log"
 #define MX 65535
 #define SIZE 512
 // Read a given file one by one line and then record each line's info to hostname what is returned is how many hosts are loaded
@@ -39,13 +39,33 @@ int read_host_config(const char *file, host_entry_t *hosts, int mx) {
     return cnt;
 }
 
+void print_help() {
+    printf("\n--- Available Commands ---\n");
+    printf("  ping <host>            : Ping a host (e.g., ping google.com)\n");
+    printf("  scan <host> <port>     : Check if a port is open (e.g., scan google.com 80)\n");
+    printf("  monitor [count]        : Monitor hosts from config file (default 10 times)\n");
+    printf("  report                 : Generate summary report from logs\n");
+    printf("  stats                  : Show detailed statistics from logs\n");
+    printf("  exit                   : Exit the program\n");
+    printf("--------------------------\n\n");
+}
+
+void handle_command_view(const char *cmd) {
+    system("clear");
+    printf(">> Executing: %s", cmd);
+    printf("---------------------------------------------------\n");
+}
+
 int main() {
     // 50 should be enough for this one..
     char cmd[50];
+    system("clear");
     printf("Welcome to Network Monitor! Please play around with this\n");
     while(true){
+        print_help();
         printf("Commands: ");
         fgets(cmd, 50, stdin);
+        handle_command_view(cmd);
         // ping case
         if (strncmp(cmd, "ping", 4) == 0) {
             char host[50];
@@ -107,7 +127,7 @@ int main() {
                 int sent, received;
                 double last_rtt, mn_rtt, mx_rtt, avg, loss_rate;
                 datareport(records, cnt, &sent, &received, &last_rtt, &mn_rtt, &mx_rtt, &avg, &loss_rate);
-                printf("11111Debuing the monitor report....\n");
+                // printf("11111Debuing the monitor report....\n");
                 printf("Total record #: %zu\n", cnt);
                 printf("Total sent: %d\n", sent);
                 printf("Total received: %d\n", received);
@@ -122,9 +142,11 @@ int main() {
             size_t cnt = dataload(DEFAULT_LOG_FILE_STATS, records, 1000);
             if (cnt == 0) printf("No records in %s\n", DEFAULT_LOG_FILE_STATS);
             else {
-                printf("Now we areat the stats part\n");
+                // printf("Now we areat the stats part\n");
                 printf("Total number of record is: %zu\n", cnt);
-                for (size_t i = 0; i < cnt && i < 10; i++) {
+                printf("Detailed Statistics (Last 10 records):\n");
+                size_t start_index = (cnt > 10) ? (cnt - 10) : 0;
+                for (size_t i = start_index; i < cnt; i++) {
                     // A usefule time struct in c
                     // https://man7.org/linux/man-pages/man3/tm.3type.html
                     struct tm *ans_time = localtime(&records[i].timestamp);
@@ -146,6 +168,14 @@ int main() {
         } else if (strncmp(cmd, "exit", 4) == 0) {
             printf("BYE BYE!!\n");
             break;
+        } else if (strncmp(cmd, "help", 4) == 0) {
+            system("clear"); 
+            print_help();
+        }else {
+            if (strlen(cmd) > 1) {
+                printf(">> Unknown command: %s", cmd);
+                printf("Please check the available commands below:\n");
+            }
         }
     }
 }
