@@ -65,7 +65,7 @@ void print_help() {
     printf("  scan <host>            : Scan common ports (e.g., scan google.com)\n");
     printf("  monitor [count]        : Monitor hosts from config file (default 10 times)\n");
     printf("  report                 : Generate summary report from logs\n");
-    printf("  stats                  : Show detailed statistics from logs\n");
+    printf("  stats [all]            : Show statistics (default: last 10, 'all': full history)\n");
     printf("  add <host> <ports>     : Add a new host (e.g., add 10.0.0.1 80)\n");
     printf("  show                   : Show current list of monitored hosts\n");
     printf("  exit                   : Exit the program\n");
@@ -199,10 +199,17 @@ int main() {
             size_t cnt = dataload(DEFAULT_LOG_FILE, records, 1000);
             if (cnt == 0) printf("No records in %s\n", DEFAULT_LOG_FILE);
             else {
-                // printf("Now we areat the stats part\n");
+                int show_all = (strstr(cmd, "all") != NULL);
                 printf("Total number of record is: %zu\n", cnt);
-                printf("Detailed Statistics (Last 10 records):\n");
-                size_t start_index = (cnt > 10) ? (cnt - 10) : 0;
+                size_t start_index = 0;
+                if (show_all) {
+                    printf("Detailed Statistics (FULL HISTORY):\n");
+                    start_index = 0; // Start from beginning
+                } else {
+                    printf("Detailed Statistics (Last 10 records):\n");
+                    // Default:show only last 10
+                    start_index = (cnt > 10) ? (cnt - 10) : 0;
+                }
                 for (size_t i = start_index; i < cnt; i++) {
                     // A usefule time struct in c
                     // https://man7.org/linux/man-pages/man3/tm.3type.html
@@ -221,7 +228,6 @@ int main() {
                 printf("Max RTT: %.2f ms\n", mx_rtt);
                 printf("Avg RTT: %.2f ms\n", avg);
             }
-
         } else if (strncmp(cmd, "add", 3) == 0) {
             handle_command_view(cmd);
             char host[100];

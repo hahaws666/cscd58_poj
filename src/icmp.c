@@ -22,7 +22,7 @@ static uint16_t cksum(void *buf, int len) {
     uint16_t *length = buf;
     while (len > 1) {
         ans += *length;
-        *length++;
+        length++;
         len -= 2;
     }
     if (len == 1) ans += *(uint8_t *)length;
@@ -85,6 +85,16 @@ int icmp_ping(const char *host, double *rtt_ms) {
     // so sad that it is unreachable
     if (n < 0) {
         //printf("333333Now we are at timeout..\n");
+        close(sockfd);
+        freeaddrinfo(res);
+        return -1;
+    }
+    struct iphdr *ip_header = (struct iphdr *)recvbuf;
+    int ip_header_len = ip_header->ihl * 4;
+    struct icmphdr *recv_icmp = (struct icmphdr *)(recvbuf + ip_header_len);
+    if (recv_icmp->type != ICMP_ECHOREPLY) {
+        printf("ICMP Packet Error: Received Type %d (Code %d) from host %s\n", 
+               recv_icmp->type, recv_icmp->code, host);
         close(sockfd);
         freeaddrinfo(res);
         return -1;
