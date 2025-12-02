@@ -124,7 +124,7 @@ int main() {
             else {
                 printf("Now we areat the stats part\n");
                 printf("Total number of record is: %zu\n", cnt);
-                for (size_t i = 0; i < cnt && i < 10; i++) {
+                for (size_t i = 0; i < cnt; i++) {
                     // A usefule time struct in c
                     // https://man7.org/linux/man-pages/man3/tm.3type.html
                     struct tm *ans_time = localtime(&records[i].timestamp);

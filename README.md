@@ -10,7 +10,7 @@ This is Our CSCD58 project, Network Monitoring System. It is a simple network mo
 ## Contribution
 - Shuang Wu: 
 - Andrew Li: Gives lots of great ideas in our proposal and implemented stats and report functions with shuang.
-- Delun Sun: 
+- Delun Sun: Finished the documentation with Shuang and Andrew and do the video demonstration to our project; debugging the functionalities in this project
 
 ## Functionalities overview
 - `ping`: sends an ICMP request based on raw socket and print result(similar to our ping)
@@ -27,7 +27,7 @@ make
 sudo ./monitor
 ```
 
-An important thing is sudo is required here
+An important thing is a linux and sudo is required here
 
 ## Examples to play around with this:
 **We can use ping**:
@@ -136,7 +136,7 @@ Time is: 2025-11-30 20:00:54, host is: 192.168.56.1, RTT: 0.00 ms, status: FAIL
 
 Total sent: 40
 Total received: 25
-Loss rate: 0.38%
+Loss rate: 37.50%
 Last RTT: 1.28 ms
 Min RTT: 1.28 ms
 Max RTT: 1031.41 ms
@@ -148,11 +148,21 @@ The exact time and ping results will be printed
 We can compile all by MAKEFILE management and all header and c files are stored in `src` directory
 The `src` directory have all the header and c code files, while with some seperating files contains different functions, for example monitor is for multi-threading report and tcp scan will do the port scanning.
 
+## Detailed implementations
+- `ping`: sends a ICMP request over a raw socket and measures the RTT by using some funcitons `cksum`; `setsockopt`; `sendto` and struct `addrinfo`. The result will print either the RTT time or the ping was failed.
+- `scan`: do a TCP connection first, then use function `select()` and `getsockopt` along with `FD` file descriptor operations to assist with select to watch the socket and get the outcome, to determine the port status, this will allow determine the port status without TCP data transfer.
+- `monitor`: it is a multi-thread function using `pthread_create` and `pthread_join` that repeatedly ping and scan the port with a given target, with a given number of samples and with a given target list. The detailed results will be recorded into a log file.
+- `report`: first load some history data from a log file, then construct the results, it will also compute the some important stats such as average, max, min of RTT.
+- `stats`: first load some history data from a log file, then print the exact time by using struct `tm` and function `localtime` of a host's status of ping, the result from report will also be printed.
+
 ## Clean the executable
 ```bash
 make clean
 ```
-## What to improve in the future?
+## Conclusions and learning lessons
+- Our team member improves our raw-socket related codings, 
+- 
+
 ## References
 https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
 https://man7.org/linux/man-pages/man3/clock_gettime.3.html
