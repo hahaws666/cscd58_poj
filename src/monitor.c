@@ -57,17 +57,14 @@ void *monitor_thread(void *arg) {
             record.ping = 1;
         }
         else record.ping = 0;
-        
         record.cnt = host->port_count;
         for (int i = 0; i < host->port_count; i++) {
             record.ports[i] = host->ports[i];
             record.status[i] = scan_port(host->hostname, host->ports[i]);
         }
         pthread_mutex_lock(&print_lock);
-
         printf("---------------------------------------------------\n");
         printf("REPORT: %s\n", host->hostname);
-
         double ans2;
         if (ans) {
             ans2 = rtt;
@@ -84,7 +81,6 @@ void *monitor_thread(void *arg) {
                     COLOR_RED, host->hostname, COLOR_RESET);
             printf("PING Status: FAIL\n");
         }
-        
         // printf("2222222222222222222 Now it comes with the attempt coming1\n");
         // printf("PING %s with status of: %s, %.2f ms\n", host->hostname, ans ? "SUCCESS!" : "FAIL!", ans ? ans2 : 0.0);
         // int ans = (icmp_ping(host->hostname, &rtt) == 0);
@@ -92,21 +88,16 @@ void *monitor_thread(void *arg) {
              printf("%s[WARNING] High Packet Loss on %s: %.2f%% (Threshold: %.0f%%)%s\n", 
                     COLOR_YELLOW, host->hostname, host->loss_rate * 100.0, ALERT_LOSS_THRESHOLD * 100.0, COLOR_RESET);
         }
-
         for (int i = 0; i < record.cnt; i++) {
             char ans_status[10];
             int ans_scan = record.status[i];
-            
             if (ans_scan == 1) strcpy(ans_status, "OPEN\0");
             else if (ans_scan == 2) strcpy(ans_status, "CLOSED\0");
             else strcpy(ans_status, "TIMEOUT\0");
-            
             printf("  - Port %d: %s\n", record.ports[i], ans_status);
         }
         printf("---------------------------------------------------\n");
-        
         pthread_mutex_unlock(&print_lock);
-
         // printf("3333 Here we go at the data append process...\n");
         FILE *fp = fopen(ans_args->log_file, "a");
         fprintf(fp, "%ld,%s,%d,%.2f,%d", (long)record.timestamp, record.hostname, record.ping, record.rtt_ms, record.cnt);
