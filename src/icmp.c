@@ -60,7 +60,7 @@ int icmp_ping(const char *host, double *rtt_ms) {
     // will make the host into an IP address
     int err = getaddrinfo(host, NULL, &hints, &res);
     if (err != 0) {
-        fprintf(stderr, "DNS Error: %s\n", gai_strerror(err));
+        fprintf(stderr, "DNS Error\n");
         return -1;
     }
     // https://pubs.opengroup.org/onlinepubs/009604499/functions/sendto.html
