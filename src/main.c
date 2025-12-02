@@ -6,9 +6,6 @@
 #include <stdbool.h>
 
 #define DEFAULT_LOG_FILE "monitor_records.log"
-#define DEFAULT_LOG_FILE_STATS "monitor_records.log"
-#define DEFAULT_LOG_FILE_REPORT "monitor_records.log"
-#define MX 65535
 #define SIZE 512
 // Read a given file one by one line and then record each line's info to hostname what is returned is how many hosts are loaded
 // hopefully fixed at 2025/11/28
@@ -46,26 +43,21 @@ void append_host_to_config(const char *host, const char *ports) {
     fclose(fp);
     printf("Successfully added host: %s\n", host);
 }
-
 // Helper to show current configuration
 void show_config() {
     FILE *fp = fopen("host_config.txt", "r");
-    if (!fp) {
-        printf("Config file not found (host_config.txt).\n");
-        return;
-    }
     printf("--- Current Host Configuration ---\n");
     char line[256];
     int i = 1;
     while (fgets(line, sizeof(line), fp)) {
         if (strlen(line) > 1) {
-            printf("%d. %s", i++, line);
+            printf("%d. %s", i, line);
+            i++;
         }
     }
     printf("----------------------------------\n");
     fclose(fp);
 }
-
 void print_help() {
     printf("\n--- Available Commands ---\n");
     printf("  ping <host>            : Ping a host (e.g., ping google.com)\n");
@@ -74,7 +66,7 @@ void print_help() {
     printf("  monitor [count]        : Monitor hosts from config file (default 10 times)\n");
     printf("  report                 : Generate summary report from logs\n");
     printf("  stats                  : Show detailed statistics from logs\n");
-    printf("  add <host> <ports>     : Add a new host (e.g., add 10.0.0.1 80,443)\n");
+    printf("  add <host> <ports>     : Add a new host (e.g., add 10.0.0.1 80)\n");
     printf("  show                   : Show current list of monitored hosts\n");
     printf("  exit                   : Exit the program\n");
     printf("--------------------------\n");
@@ -134,7 +126,7 @@ int main() {
                     fflush(stdout); 
                     int ans = scan_port(host, p);
                     if (ans == 1) {
-                        printf("  [+] Port %-5d : OPEN     \n", p);
+                        printf("  [+] Port %-5d is OPEN \n", p);
                         ans_cnt++;
                     }
                 }
@@ -186,8 +178,8 @@ int main() {
             printf("All monitoring completed.\n");
         } else if (strncmp(cmd, "report", 6) == 0) {            
             monitor_record_t records[1000];
-            size_t cnt = dataload(DEFAULT_LOG_FILE_REPORT, records, 1000);
-            if (cnt == 0) printf("No records in %s\n", DEFAULT_LOG_FILE_REPORT);
+            size_t cnt = dataload(DEFAULT_LOG_FILE, records, 1000);
+            if (cnt == 0) printf("No records in %s\n", DEFAULT_LOG_FILE);
             else {
                 int sent, received;
                 double last_rtt, mn_rtt, mx_rtt, avg, loss_rate;
@@ -204,8 +196,8 @@ int main() {
             }
         } else if (strncmp(cmd, "stats", 5) == 0) {            
             monitor_record_t records[1000];
-            size_t cnt = dataload(DEFAULT_LOG_FILE_STATS, records, 1000);
-            if (cnt == 0) printf("No records in %s\n", DEFAULT_LOG_FILE_STATS);
+            size_t cnt = dataload(DEFAULT_LOG_FILE, records, 1000);
+            if (cnt == 0) printf("No records in %s\n", DEFAULT_LOG_FILE);
             else {
                 // printf("Now we areat the stats part\n");
                 printf("Total number of record is: %zu\n", cnt);
@@ -247,10 +239,7 @@ int main() {
          else if (strncmp(cmd, "exit", 4) == 0) {
             printf("BYE BYE!!\n");
             break;
-        } else if (strncmp(cmd, "help", 4) == 0) {
-            system("clear"); 
-            print_help();
-        }else {
+        } else {
             if (strlen(cmd) > 1) {
                 printf(">> Unknown command: %s", cmd);
                 printf("Please check the available commands below:\n");

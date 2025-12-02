@@ -18,11 +18,13 @@ This is Our CSCD58 project, Network Monitoring System. It is a simple network mo
 - `monitor`: based on a multi-thread repeatdly ping and scan with a list given in `host_congfig.txt`, result is recorded in a log file
 - `stats`: load a log file and print the summary of its monitored results.
 - `report`: load a log file and calculate the ping's statistics
+- `add`: add host and port to the record you want to test or monitor with
+- `show`: show the current list of hosts and ports
 
 ## Compile and run
 
 ```bash
-cd /home/mininet/project/cscd58_poj
+cd /cscd58_poj
 make
 sudo ./monitor
 ```
@@ -41,12 +43,12 @@ RTT = 52.98 ms
 
 **We can use scan port**
 ```bash
-scan google.com 22
+scan google.com 443
 ```
 Example output:
 ```bash
-1111111111111 start of scan port!!
-Port is open
+Scanning google.com : 443...
+>> Port 443 is OPEN
 ```
 
 **We can monitor the hosts from a config file with all targetes and all results will be stored in a log file**
@@ -123,6 +125,7 @@ Example output:
 ```bash
 Now we are at the stats part
 Total number of record is: 40
+Detailed Statistics (Last 10 records):
 Time is: 2025-11-30 20:00:49, host is: 1.1.1.1, RTT: 5.22 ms, status: OK
 Time is: 2025-11-30 20:00:49, host is: www.google.com, RTT: 41.24 ms, status: OK
 Time is: 2025-11-30 20:00:49, host is: 8.8.8.8, RTT: 5.75 ms, status: OK
