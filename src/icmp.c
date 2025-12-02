@@ -65,12 +65,12 @@ int icmp_ping(const char *host, double *rtt_ms) {
     }
     // https://pubs.opengroup.org/onlinepubs/009604499/functions/sendto.html
     // now we will send the icmp packet over raw socket
-    sendto(sockfd, sendbuf, sizeof(struct icmphdr), 0, res->ai_addr, res->ai_addrlen);
+    // sendto(sockfd, sendbuf, sizeof(struct icmphdr), 0, res->ai_addr, res->ai_addrlen);
     if (sendto(sockfd, sendbuf, sizeof(struct icmphdr), 0, res->ai_addr, res->ai_addrlen) < 0) {
-         perror("Sendto Failed"); 
-         close(sockfd);
-         freeaddrinfo(res);
-         return -1;
+      perror("Sendto Failed"); 
+      close(sockfd);
+      freeaddrinfo(res);
+      return -1;
     }
     char recvbuf[1024];
     struct sockaddr_in reply_addr;
@@ -93,8 +93,7 @@ int icmp_ping(const char *host, double *rtt_ms) {
     int ip_header_len = ip_header->ihl * 4;
     struct icmphdr *recv_icmp = (struct icmphdr *)(recvbuf + ip_header_len);
     if (recv_icmp->type != ICMP_ECHOREPLY) {
-        printf("ICMP Packet Error: Received Type %d (Code %d) from host %s\n", 
-               recv_icmp->type, recv_icmp->code, host);
+        printf("ICMP Packet Error: Received Type %d (Code %d) from host %s\n", recv_icmp->type, recv_icmp->code, host);
         close(sockfd);
         freeaddrinfo(res);
         return -1;

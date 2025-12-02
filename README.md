@@ -8,9 +8,9 @@ This is Our CSCD58 project, Network Monitoring System. It is a simple network mo
 - Delun Sun 1007925391 delun.sun@mail.utoronto.ca
 
 ## Contribution
-- Shuang Wu: 
-- Andrew Li: Gives lots of great ideas in our proposal and implemented stats and report functions with shuang.
-- Delun Sun: 
+- Shuang Wu: Gives a great structure and proposal of our project, implemented `ping` and `stats` with Delun and gives great ideas on how `scan` is handled and designd on how the input and output should be handled with our program. Writing the documentation with Delun
+- Andrew Li: Gives lots of great ideas in our proposal and implemented `scan` and `report` and `monitor` functions with Delun, implemented `add` and `show` functions and improving the command line page as well. Debugging and fix some issues with Delun
+- Delun Sun: Debugging and fixing code issues with Andrew, and finishing the documentations. Implemented `scan` and `report` and `monitor` functions with Andrew, fixing some issued in icmp ping, and finished the video recordings. 
 
 ## Functionalities overview
 - `ping`: sends an ICMP request based on raw socket and print result(similar to our ping)
@@ -158,13 +158,15 @@ The `src` directory have all the header and c code files, while with some sepera
 - `report`: first load some history data from a log file, then construct the results, it will also compute the some important stats such as average, max, min of RTT.
 - `stats`: first load some history data from a log file, then print the exact time by using struct `tm` and function `localtime` of a host's status of ping(only the latest 10 stats record will be printed), the result from report will also be printed.
 
-## Clean the executable
+## Clean the executable(monitor)
 ```bash
 make clean
 ```
-## Conclusions and learning lessons
-- Our team member improves our raw-socket related codings, 
-- 
+## Conclusions and learned lessons
+- We get a better understanding to raw socket networking and becomes familar on how to implement them through c code, including how to construct the ICMP packets, initialize the `addrinfo` structures, and managing TCP connections. We learned that all of these implementations must be carefully handled, an uncareful handling can cause unexpected results.
+- While we are building the multi-threaded monitoring, we learned and reviewd the importance of concurrent safety, including how to design the thread, isolate each others, and all components should be ablt to interact with each other and remains able to debugging.
+- At monitoring system, We need careful handle at data logging and parsing because all of them are related or depends on each other, this include strict format and file formatting.
+
 ## References
 https://man7.org/linux/man-pages/man3/getaddrinfo.3.html
 https://man7.org/linux/man-pages/man3/clock_gettime.3.html
