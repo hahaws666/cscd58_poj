@@ -42,10 +42,6 @@ int read_host_config(const char *file, host_entry_t *hosts, int mx) {
 // Helper to append a new host to the config file
 void append_host_to_config(const char *host, const char *ports) {
     FILE *fp = fopen("host_config.txt", "a");
-    if (!fp) {
-        perror("Error opening config file");
-        return;
-    }
     fprintf(fp, "%s %s\n", host, ports);
     fclose(fp);
     printf("Successfully added host: %s\n", host);
