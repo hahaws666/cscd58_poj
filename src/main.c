@@ -110,6 +110,9 @@ int main() {
                 hosts[i].mn_rtt = 1e9;
                 hosts[i].mx_rtt = 0.0;
                 hosts[i].sum_rtt = 0.0;
+                hosts[i].last_jitter = 0.0;
+                hosts[i].sum_jitter = 0.0;
+                hosts[i].mx_jitter = 0.0;
                 hosts[i].loss_rate = 0.0;
                 //创建线程
                 pthread_create(&thread_ids[i], NULL, monitor_thread, ans_args);

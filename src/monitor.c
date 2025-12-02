@@ -6,6 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h>
 
 // Global lock for clean terminal output
 static pthread_mutex_t print_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -32,6 +33,15 @@ void *monitor_thread(void *arg) {
         // Update stats
         host->total_sent++;
         if (ans) {
+            double current_jitter = 0.0;
+            if (host->total_received > 0) {
+                current_jitter = fabs(rtt - host->last_rtt);
+                
+                // Update Jitter Stats
+                host->last_jitter = current_jitter;
+                host->sum_jitter += current_jitter;
+                if (current_jitter > host->mx_jitter) host->mx_jitter = current_jitter;
+            }
             host->total_received++;
             host->last_rtt = rtt;
             if (rtt < host->mn_rtt) host->mn_rtt = rtt;
@@ -65,7 +75,7 @@ void *monitor_thread(void *arg) {
                 printf("%s[WARNING] High Latency detected on %s: %.2f ms (Threshold: %.0f ms)%s\n", 
                         COLOR_YELLOW, host->hostname, rtt, ALERT_RTT_THRESHOLD, COLOR_RESET);
             } else {
-                printf("PING Status: SUCCESS (%.2f ms)\n", rtt);
+                printf("PING Status: SUCCESS (%.2f ms) | Jitter: %.2f ms\n", rtt, host->last_jitter);
             }
         }
         else {

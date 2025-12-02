@@ -22,6 +22,9 @@ typedef struct {
     double mn_rtt;
     double mx_rtt;
     double sum_rtt;
+    double last_jitter; 
+    double sum_jitter;
+    double mx_jitter;
     double loss_rate; //丢包率
 } host_entry_t;
 typedef struct {
