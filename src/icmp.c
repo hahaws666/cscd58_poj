@@ -14,6 +14,7 @@
 #include <sys/time.h>
 #include <sys/sysinfo.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 // helper function to do the checksum returns checksum
 // this is equivalent to our a3 after some refactoring
@@ -72,6 +73,11 @@ int icmp_ping(const char *host, double *rtt_ms) {
       freeaddrinfo(res);
       return -1;
     }
+
+    // debugging... and found that we must verify the target ip
+    struct sockaddr_in *ans_target = (struct sockaddr_in*)res->ai_addr;
+    uint32_t ans_targetIP = ans_target->sin_addr.s_addr;
+
     char recvbuf[1024];
     struct sockaddr_in reply_addr;
     socklen_t reply_len = sizeof(reply_addr);
@@ -81,27 +87,33 @@ int icmp_ping(const char *host, double *rtt_ms) {
     // https://pubs.opengroup.org/onlinepubs/009695099/functions/setsockopt.html
     // set a receive timeout
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-    ssize_t n = recvfrom(sockfd, recvbuf, sizeof(recvbuf), 0, (struct sockaddr *)&reply_addr, &reply_len);
-    // so sad that it is unreachable
-    if (n < 0) {
-        //printf("333333Now we are at timeout..\n");
-        close(sockfd);
-        freeaddrinfo(res);
-        return -1;
+    while (true) {
+        ssize_t n = recvfrom(sockfd, recvbuf, sizeof(recvbuf), 0, (struct sockaddr *)&reply_addr, &reply_len);
+        // so sad that it is unreachable
+        if (n < 0) {
+            //printf("333333Now we are at timeout..\n");
+            close(sockfd);
+            freeaddrinfo(res);
+            return -1;
+        }
+        if (reply_addr.sin_addr.s_addr != ans_targetIP) continue;
+        struct iphdr *ip_header = (struct iphdr *)recvbuf;
+        int ip_header_len = ip_header->ihl * 4;
+        struct icmphdr *recv_icmp = (struct icmphdr *)(recvbuf + ip_header_len);
+        if (recv_icmp->type != ICMP_ECHOREPLY) {
+            printf("ICMP Packet Error: Received Type %d (Code %d) from host %s\n", recv_icmp->type, recv_icmp->code, host);
+            close(sockfd);
+            freeaddrinfo(res);
+            return -1;
+        }
+        // debug for so long... and found we need to make sure this is the same request id
+        if (recv_icmp->un.echo.id == ans_icmp->un.echo.id) {
+            clock_gettime(CLOCK_MONOTONIC, &ans2);
+            // RTT measurement formulas
+            *rtt_ms = (ans2.tv_sec - ans1.tv_sec) * 1000.0 + (ans2.tv_nsec - ans1.tv_nsec) / 1e6;
+            close(sockfd);
+            freeaddrinfo(res);
+            return 0;
+        }
     }
-    struct iphdr *ip_header = (struct iphdr *)recvbuf;
-    int ip_header_len = ip_header->ihl * 4;
-    struct icmphdr *recv_icmp = (struct icmphdr *)(recvbuf + ip_header_len);
-    if (recv_icmp->type != ICMP_ECHOREPLY) {
-        printf("ICMP Packet Error: Received Type %d (Code %d) from host %s\n", recv_icmp->type, recv_icmp->code, host);
-        close(sockfd);
-        freeaddrinfo(res);
-        return -1;
-    }
-    clock_gettime(CLOCK_MONOTONIC, &ans2);
-    // RTT measurement formulas
-    *rtt_ms = (ans2.tv_sec - ans1.tv_sec) * 1000.0 + (ans2.tv_nsec - ans1.tv_nsec) / 1e6;
-    close(sockfd);
-    freeaddrinfo(res);
-    return 0;
 }
